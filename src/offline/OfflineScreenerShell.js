@@ -17,6 +17,7 @@ const BODY_FONT = "'DM Sans', sans-serif";
 
 const MESSAGES = {
   none: "The screener isn't on this device yet. Connect to the internet and download it before going to a school without signal.",
+  revoked: "Offline access for this device has been withdrawn. Connect to the internet and download the screener again. Any results you captured are still saved and will upload first.",
   expired: "Your offline licence has expired. Connect to the internet and download the screener again. Any results you captured are still saved and will upload first.",
   locked: "The device clock looks wrong, so the screener is locked. Set the correct date and time, then reopen it.",
   damaged: "The saved screener on this device couldn't be opened. Connect to the internet and download it again. Any results you captured are still saved and will upload first.",

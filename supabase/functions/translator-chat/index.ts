@@ -1,3 +1,4 @@
+// @ts-nocheck
 // supabase/functions/translator-chat/index.ts
 //
 // The in-app translator chat bot (English / isiXhosa / Afrikaans), backed by

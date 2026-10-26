@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  downloadOfflineScreener, loadOfflineScreener, pendingCount,
+  checkLicence, downloadOfflineScreener, loadOfflineScreener, pendingCount,
   syncOfflineSessions, QUEUE_EVENT,
 } from "./offlineVault";
 
@@ -28,6 +28,21 @@ export default function OfflineReadyCard({ onScreenOffline }) {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Ask the server whether this device's licence is still valid, so a licence
+  // an admin cancelled stops showing as "ready" here. Runs on load and again
+  // whenever the connection comes back.
+  useEffect(() => {
+    let cancelled = false;
+    const verify = async () => {
+      await checkLicence().catch(() => {});
+      if (!cancelled) refresh();
+    };
+    verify();
+    window.addEventListener("online", verify);
+    return () => { cancelled = true; window.removeEventListener("online", verify); };
+  }, [refresh]);
+
   useEffect(() => {
     window.addEventListener(QUEUE_EVENT, refresh);
     return () => window.removeEventListener(QUEUE_EVENT, refresh);
@@ -83,7 +98,9 @@ export default function OfflineReadyCard({ onScreenOffline }) {
       <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: "0 0 14px" }}>
         {ready
           ? `On this device for ${daysLeft} more ${daysLeft === 1 ? "day" : "days"}.`
-          : state.status === "expired"
+          : state.status === "revoked"
+            ? "Offline access for this device has been withdrawn. Download the screener again to carry on screening offline."
+            : state.status === "expired"
             ? "Your offline screener has expired. Download it again before your next visit."
             : state.status === "other_user"
               ? "The offline screener on this device belongs to another educator."

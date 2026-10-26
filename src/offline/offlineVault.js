@@ -19,6 +19,9 @@ const DB_NAME = "puzzlebox-offline";
 const STORE = "vault";
 const SESSION_PREFIX = "session:";
 const DRAFT_PREFIX = "draft:"; // in-progress screening, one per child
+// Set once the server says this device's licence was cancelled, so the card
+// keeps saying "download it again" even after a reload or while offline.
+const REVOKED_KEY = "revoked";
 
 // Fired on window whenever the number of waiting sessions changes,
 // so the UI can update its "waiting to sync" count.
@@ -209,6 +212,10 @@ export async function downloadOfflineScreener() {
 
   await put("lastSeen", Date.now());
 
+  // A new licence replaces a cancelled one, so clear the old verdict.
+  await del(REVOKED_KEY);
+  notify();
+
   return data.licence;
 }
 
@@ -228,6 +235,10 @@ export async function loadOfflineScreener() {
   if (licence.userId && auth.currentUser && auth.currentUser.uid !== licence.userId) {
     return { status: "other_user", licence };
   }
+
+  // An administrator cancelled this licence (or deleted it) while the device
+  // was online. The screener stays closed until a new one is downloaded.
+  if (await get(REVOKED_KEY)) return { status: "revoked", licence };
 
   // Offline licence check: runs on app launch, before the screener is decrypted
 
@@ -334,6 +345,72 @@ export async function pendingCount() {
   return (await sessionKeys()).length;
 }
 
+// ── Cancelled licences ───────────────────────────────────────────────────────
+
+/**
+ * Shuts the offline screener down on this device after the server says the
+ * licence was cancelled (revoked, or its row deleted by an administrator).
+ *
+ * The encrypted screener and its key always go, so the questions can't be
+ * opened again. Captured results are never thrown away: if anything is still
+ * waiting to upload, or a screening is half-done, only the licence is marked
+ * cancelled and the rest is wiped on the next sync, once nothing is left.
+ *
+ * @param {number} remaining - Sessions that failed to upload in this sync.
+ * @returns {Promise<void>}
+ */
+async function applyRevocation(remaining = 0) {
+  const stillWaiting = remaining > 0
+    || (await sessionKeys()).length > 0
+    || (await draftKeys()).length > 0;
+
+  if (stillWaiting) {
+    // Keep the saved results and drafts, but close the screener itself.
+    await put(REVOKED_KEY, true);
+    await del("package");
+    await del("key");
+  } else {
+    await wipeAll();
+  }
+  notify();
+}
+
+/**
+ * Asks the server whether this device's offline licence is still valid, and
+ * applies the answer locally. Safe to call on every page load: it does
+ * nothing when the device is offline, nobody is signed in, or no licence has
+ * been downloaded.
+ *
+ * @returns {Promise<{ revoked: boolean, checked: boolean }>} `checked` is
+ *   false when the server couldn't be reached, so the caller can leave the
+ *   current state alone rather than treat it as cancelled.
+ */
+export async function checkLicence() {
+  if (!navigator.onLine || !auth.currentUser) return { revoked: false, checked: false };
+
+  const licence = await get("licence");
+  if (!licence) return { revoked: false, checked: false };
+  if (await get(REVOKED_KEY)) return { revoked: true, checked: true };
+
+  try {
+    const { data, error } = await supabase.functions.invoke("issue-offline-package", {
+      body: { action: "status", licenceId: licence.id },
+      headers: await firebaseHeaders(),
+    });
+    if (error) return { revoked: false, checked: false };
+
+    if (data?.revoked) {
+      // Upload anything outstanding first, so no result is lost with the licence.
+      if ((await sessionKeys()).length > 0) await syncOfflineSessions().catch(() => {});
+      await applyRevocation();
+      return { revoked: true, checked: true };
+    }
+    return { revoked: false, checked: true };
+  } catch {
+    return { revoked: false, checked: false };
+  }
+}
+
 // ── Sync when back online ────────────────────────────────────────────────────
 // Only one sync runs at a time. A second call while one is running gets the
 // same result instead of starting another upload of the same sessions.
@@ -412,12 +489,9 @@ async function doSync() {
       headers: await firebaseHeaders(),
     });
 
-    // Cancelled licence (lost device, staff left): wipe once everything has
-    // uploaded and no screening is half-done on the device
-    if (status?.revoked && remaining === 0 && (await draftKeys()).length === 0) {
-      await wipeAll();
-      notify();
-    }
+    // Cancelled licence (lost device, staff left, admin deleted the row):
+    // shut the screener down on this device straight away.
+    if (status?.revoked) await applyRevocation(remaining);
 
     return { synced, remaining };
   } catch {

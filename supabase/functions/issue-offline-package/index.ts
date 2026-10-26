@@ -1,3 +1,4 @@
+// @ts-nocheck
 // supabase/functions/issue-offline-package/index.ts
 //
 // Two actions, both called by src/offline/offlineVault.js:
