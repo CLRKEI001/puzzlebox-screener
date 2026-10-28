@@ -28,7 +28,7 @@ export function mapChildRow(r) {
     // Use the student number if present; otherwise fall back to name so
     // the child can still be identified in lists and reports
     studentNumber: r.student_number || r.name,
-    dataSource: r.data_source, // "app" | "pilot" | "demo" (mock data for testing)
+    dataSource: r.data_source, // "app" | "pilot" | "demo" (old made-up test children)
     school: r.school,
     province: r.province,
     age: r.age,

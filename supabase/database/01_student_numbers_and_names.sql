@@ -12,9 +12,10 @@
 --      ever sees student numbers. The child's own teacher and psychologists
 --      read the real name through the `children_named` view (rule set in 04).
 --   5. `children.data_source`: 'app' (added in the app), 'pilot' (the spreadsheet,
---      file 02) or 'demo' (mock data for testing, file 03).
+--      file 02) or 'demo' (the old made-up test children, kept only so they
+--      can be found and removed; see README "Removing the old mock children").
 --
--- Run this FIRST, then 02 (pilot data), 03 (mock data), 04 (access rules). Safe to run more than once.
+-- Run this FIRST, then 02 (pilot data), 04 (access rules). Safe to run more than once.
 
 begin;
 
@@ -190,7 +191,7 @@ as $$
 $$;
 
 -- The old app-generated mock children ("Child PB-001" ... "Child PB-015") are
--- kept for testing, but labelled as demo data so they can be told apart.
+-- labelled as demo data so they can be told apart and removed.
 -- (Before names are moved, while children.name still holds the real value.)
 update public.children
    set data_source = 'demo'
