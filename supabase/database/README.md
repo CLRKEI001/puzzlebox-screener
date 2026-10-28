@@ -1,4 +1,4 @@
-# Database setup: student numbers, pilot data, mock data, access rules
+# Database setup: student numbers, pilot data, access rules
 
 Run these **in order**, once each, in Supabase → **SQL Editor** (or with `npx supabase db query --linked -f <file>`). Every file can safely be run again.
 
@@ -7,7 +7,6 @@ Run these **in order**, once each, in Supabase → **SQL Editor** (or with `npx 
 | 0 | `00_backup.sql` | Copies every table and the current rules into a private `backup_20261006` schema |
 | 1 | `01_student_numbers_and_names.sql` | Gives every child a student number and moves real names somewhere only their teacher can read |
 | 2 | `02_pilot_data.sql` | Imports the pilot spreadsheet: 327 children, every answer kept. **Not in git** (the repo is public): build it with the script under *Pilot data* below |
-| 3 | `03_mock_data.sql` | Keeps or adds the 15 made-up test children (`Child PB-001…015`) |
 | 4 | `04_access_rules.sql` | Turns on the rules for who can see and change what. **Only after the check below passes.** |
 
 **Teachers always see their own students' names** in the updated app. It reads them through the `children_named` view. The site that's live today is older code that reads `children.name` directly, and after step 1 that column holds the student number. So deploy this branch's app at the same time as you run step 1. Don't leave a gap where the old site is running against the new database.
@@ -70,21 +69,26 @@ Format: **school code – age – number**, e.g. `FB-5-0042`.
   `py supabase/database/tools/build_pilot_import.py "C:/path/to/Data for coding PuzzleBox.xlsx"`
 - To remove the pilot data: `delete from public.children where data_source = 'pilot';`
 
-## Mock data (step 3)
+## Removing the old mock children
 
-The 15 test children have `data_source = 'demo'`. If your database already holds the ones the old app created, they're kept and labelled `demo`, and no new copies are added.
+The mock data file (`03_mock_data.sql`) has been removed. If your database still holds the 15 made-up children (`Child PB-001…015`, labelled `data_source = 'demo'`), remove them, and anything recorded against them, with:
 
-- Give them to a teacher account so you can test as a teacher:
-  `select app.assign_demo_children('teacher@example.com');`
-- Remove them when you're done:
-  ```sql
-  delete from public.screening_sessions where child_id in (select id from public.children where data_source = 'demo');
-  delete from public.children where data_source = 'demo';
-  ```
+```sql
+begin;
+delete from public.messages             where child_id in (select id from public.children where data_source = 'demo');
+delete from public.follow_ups           where child_id in (select id from public.children where data_source = 'demo');
+delete from public.puzzlebox_screenings where child_id in (select id from public.children where data_source = 'demo');
+delete from public.screening_sessions   where child_id in (select id from public.children where data_source = 'demo');
+delete from public.children             where data_source = 'demo';
+drop function if exists app.assign_demo_children(text);
+commit;
+```
+
+Run `00_backup.sql` first. Their private names in `child_identities` are removed automatically with them.
 
 ## Tested
 
-Run against a copy of the schema in real Postgres (PGlite). All four files ran twice in a row with no errors and no duplicate rows. 70 checks passed for logged-out visitors, pending users, two teachers, a psychologist and an admin, including:
+Run against a copy of the schema in real Postgres (PGlite). The setup files ran twice in a row with no errors and no duplicate rows. 70 checks passed for logged-out visitors, pending users, two teachers, a psychologist and an admin, including:
 - a token from another Firebase project is rejected
 - a user can't self-approve or self-promote
 - each role sees exactly the rows and names it should
