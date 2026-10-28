@@ -23,6 +23,7 @@ import { useScreenerContent, scoreFromAgeTable } from "../../hooks/useScreenerCo
 import { mapChildRow } from "../../utils/mappers";
 import { saveDraft, getDraft, deleteDraft, saveOfflineSession } from "../../offline/offlineVault";
 import { SinglePuzzlePiece } from "../shared/puzzlePiece";
+import { useLanguage, LanguageSwitcher } from "../../theme/LanguageContext";
 import "./PuzzleBoxScreener.css";
 
 // Cycles each child's avatar through the app's own accent palette (rather
@@ -50,6 +51,10 @@ function ChildAvatar({ name, size = 40 }) {
   );
 }
 
+// Screen text in English, Afrikaans and isiXhosa. Only what this screen shows
+// is translated: section/question content comes from the database, and what
+// gets saved (e.g. the psychologist's notification) stays in English.
+// "{name}"-style placeholders are filled in with fill() below.
 const T = {
   en: {
     title: "PuzzleBox Screener",
@@ -66,21 +71,28 @@ const T = {
     resumeScreening: "Resume Screening",
     back: "Back", next: "Next", submit: "Submit Screening",
     saving: "Saving…", saved: "Saved",
-    sectionOf: "Section", of: "of",
+    sectionProgress: "Section {i} of {n}",
     observations: "Observations / Notes",
     observationsPlaceholder: "Anything else worth noting about this screening...",
     submitConfirmTitle: "Submit this screening?",
-    submitConfirmBody: "questions are still unanswered. You can still submit — the psychologist will see which items were skipped.",
+    submitConfirmBody: "{n} questions are still unanswered. You can still submit — the psychologist will see which items were skipped.",
     submitConfirmBodyComplete: "All questions have been answered.",
     cancel: "Cancel",
     confirmSubmit: "Yes, Submit",
+    submitting: "Submitting…",
     submitted: "Screening Submitted",
-    submittedSub: "has been saved to",
+    submittedOnline: "{name} has been saved to {place}.",
+    submittedRecordFallback: "the child's record",
+    submittedOffline: "{name}'s screening is saved on this device. It will upload and go to the psychologist for review automatically the next time you're online.",
     submittedBackHome: "Back to My Home",
-    submittedOffline: "is saved on this device. It will upload and go to the psychologist for review automatically the next time you're online.",
+    totalTimeTaken: "Total time taken:",
     recordTime: "Record Time",
     min: "min", sec: "sec",
     computedScore: "Score",
+    toPass: "To Pass:",
+    syncedWithTimer: "Synced with the puzzle timer →",
+    timeRecordedTitle: "Time recorded from the page timer",
+    overTimeScoringNote: "Scoring for going over the time limit is still being finalised by the psychologists — the time is recorded either way.",
     exit: "Exit",
     exitConfirm: "Leave the screening? Your progress has already been saved and you can resume later.",
     exitConfirmOffline: "Leave the screening? Your progress is saved on this device and you can resume later, even without signal.",
@@ -90,8 +102,152 @@ const T = {
     consentMissingBody: "A signed parent/guardian consent form is required before this child can be screened. Go to My Class, open this child's record, and upload one — you can also download a blank form to send home.",
     consentIncompleteTitle: "Consent form incomplete",
     consentVerifiedBadge: "Consent form on file ✓",
+    priorScreenedOne: "Already screened 1 time before",
+    priorScreenedMany: "Already screened {n} times before",
+    mostRecent: "Most recent:",
+    stillAwaitingReview: "(still awaiting review)",
+    loadingContent: "Loading screener content…",
+    sectionTimer: "Section timer",
+    timerFor: "for \"{label}\"",
+    overTimeLimit: "Over time (10 min limit)",
+    timerStart: "Start", timerResume: "Resume", timerPause: "Pause", timerReset: "Reset",
+    sessionTimerTitle: "Total time on this screening, across every section",
+    errLoadChildren: "Could not load children: ",
+    errStart: "Could not start the screening: ",
+    errStartDevice: "Could not start the screening on this device: ",
+    errSubmit: "Could not submit the screening: ",
+    errSaveDevice: "Could not save the screening on this device: ",
+  },
+  af: {
+    title: "PuzzleBox Sifter",
+    selectChild: "Kies 'n Kind",
+    searchPlaceholder: "Soek volgens kind se naam of skool...",
+    noChildren: "Geen kinders gevind nie",
+    noChildrenSub: "Probeer 'n ander soektog, of voeg die kind eers op die Kinders-bladsy by.",
+    resumeBadge: "Aan die gang",
+    confirmChild: "Bevestig Kind",
+    confirmSub: "Maak seker dit is die regte kind voordat jy begin.",
+    name: "Naam", school: "Skool", age: "Ouderdom", language: "Taal",
+    goBack: "← Kies 'n ander kind",
+    startScreening: "Begin Sifting",
+    resumeScreening: "Hervat Sifting",
+    back: "Terug", next: "Volgende", submit: "Dien Sifting In",
+    saving: "Stoor…", saved: "Gestoor",
+    sectionProgress: "Afdeling {i} van {n}",
+    observations: "Waarnemings / Notas",
+    observationsPlaceholder: "Enigiets anders wat oor hierdie sifting genoem moet word...",
+    submitConfirmTitle: "Dien hierdie sifting in?",
+    submitConfirmBody: "{n} vrae is nog nie beantwoord nie. Jy kan steeds indien — die sielkundige sal sien watter items oorgeslaan is.",
+    submitConfirmBodyComplete: "Alle vrae is beantwoord.",
+    cancel: "Kanselleer",
+    confirmSubmit: "Ja, Dien In",
+    submitting: "Dien in…",
+    submitted: "Sifting Ingedien",
+    submittedOnline: "{name} is gestoor by {place}.",
+    submittedRecordFallback: "die kind se rekord",
+    submittedOffline: "{name} se sifting is op hierdie toestel gestoor. Dit sal outomaties opgelaai en vir hersiening na die sielkundige gestuur word sodra jy weer aanlyn is.",
+    submittedBackHome: "Terug na My Tuisblad",
+    totalTimeTaken: "Totale tyd geneem:",
+    recordTime: "Teken Tyd Aan",
+    min: "min", sec: "sek",
+    computedScore: "Punt",
+    toPass: "Om te Slaag:",
+    syncedWithTimer: "Gesinchroniseer met die legkaart-tydhouer →",
+    timeRecordedTitle: "Tyd aangeteken deur die bladsy se tydhouer",
+    overTimeScoringNote: "Die puntetoekenning vir die oorskryding van die tydsbeperking word nog deur die sielkundiges gefinaliseer — die tyd word in elk geval aangeteken.",
+    exit: "Verlaat",
+    exitConfirm: "Verlaat die sifting? Jou vordering is reeds gestoor en jy kan later hervat.",
+    exitConfirmOffline: "Verlaat die sifting? Jou vordering is op hierdie toestel gestoor en jy kan later hervat, selfs sonder sein.",
+    notAgeSupported: "Hierdie sifter se ouderdomsgebaseerde puntetoekenning dek 5- en 6-jariges — 'n rou tyd/telling word steeds vir hierdie kind aangeteken, maar geen 0–2-punt kan outomaties bepaal word nie.",
+    checklistCount: "gemerk",
+    consentMissingTitle: "Geen toestemmingsvorm op lêer nie",
+    consentMissingBody: "'n Getekende toestemmingsvorm van 'n ouer/voog word vereis voordat hierdie kind gesif kan word. Gaan na My Klas, maak hierdie kind se rekord oop en laai een op — jy kan ook 'n leë vorm aflaai om huis toe te stuur.",
+    consentIncompleteTitle: "Toestemmingsvorm onvolledig",
+    consentVerifiedBadge: "Toestemmingsvorm op lêer ✓",
+    priorScreenedOne: "Reeds 1 keer vantevore gesif",
+    priorScreenedMany: "Reeds {n} keer vantevore gesif",
+    mostRecent: "Mees onlangs:",
+    stillAwaitingReview: "(wag nog vir hersiening)",
+    loadingContent: "Laai sifter-inhoud…",
+    sectionTimer: "Afdeling-tydhouer",
+    timerFor: "vir \"{label}\"",
+    overTimeLimit: "Oortyd (10 min-limiet)",
+    timerStart: "Begin", timerResume: "Hervat", timerPause: "Pouseer", timerReset: "Herstel",
+    sessionTimerTitle: "Totale tyd aan hierdie sifting, oor alle afdelings heen",
+    errLoadChildren: "Kon nie kinders laai nie: ",
+    errStart: "Kon nie die sifting begin nie: ",
+    errStartDevice: "Kon nie die sifting op hierdie toestel begin nie: ",
+    errSubmit: "Kon nie die sifting indien nie: ",
+    errSaveDevice: "Kon nie die sifting op hierdie toestel stoor nie: ",
+  },
+  xh: {
+    title: "Isikrini se-PuzzleBox",
+    selectChild: "Khetha Umntwana",
+    searchPlaceholder: "Khangela ngegama lomntwana okanye isikolo...",
+    noChildren: "Akukho bantwana bafunyenweyo",
+    noChildrenSub: "Zama ukukhangela ngenye indlela, okanye uqale wongeze umntwana kwiphepha elithi Abantwana.",
+    resumeBadge: "Iyaqhubeka",
+    confirmChild: "Qinisekisa Umntwana",
+    confirmSub: "Qinisekisa ukuba ngulo umntwana ofanelekileyo phambi kokuba uqalise.",
+    name: "Igama", school: "Isikolo", age: "Ubudala", language: "Ulwimi",
+    goBack: "← Khetha omnye umntwana",
+    startScreening: "Qalisa Uhlolo",
+    resumeScreening: "Qhubeka Nohlolo",
+    back: "Emva", next: "Okulandelayo", submit: "Ngenisa Uhlolo",
+    saving: "Iyagcina…", saved: "Igciniwe",
+    sectionProgress: "Icandelo {i} kwa-{n}",
+    observations: "Okuqatshelweyo / Amagqabantshintshi",
+    observationsPlaceholder: "Nantoni na eyongezelelweyo efanele ukuqatshelwa ngolu hlolo...",
+    submitConfirmTitle: "Ngenisa olu hlolo?",
+    submitConfirmBody: "Imibuzo eli-{n} isengaphendulwanga. Usenako ukungenisa — isazi sengqondo siya kubona ukuba yeyiphi imibuzo etsibiweyo.",
+    submitConfirmBodyComplete: "Yonke imibuzo iphenduliwe.",
+    cancel: "Rhoxisa",
+    confirmSubmit: "Ewe, Ngenisa",
+    submitting: "Iyangenisa…",
+    submitted: "Uhlolo Lungenisiwe",
+    submittedOnline: "Uhlolo luka-{name} lugcinwe ku: {place}.",
+    submittedRecordFallback: "irekhodi yomntwana",
+    submittedOffline: "Uhlolo luka-{name} lugcinwe kwesi sixhobo. Luya kulayishwa ngokuzenzekelayo luthunyelwe kwisazi sengqondo ukuze luphononongwe xa uphinda uqhagamshele kwi-intanethi.",
+    submittedBackHome: "Buyela Ekhaya Lam",
+    totalTimeTaken: "Ixesha elithathiweyo lilonke:",
+    recordTime: "Bhala Ixesha",
+    min: "imizuzu", sec: "imizuzwana",
+    computedScore: "Amanqaku",
+    toPass: "Ukuze Aphumelele:",
+    syncedWithTimer: "Ihambelana nesibali-xesha sephazili →",
+    timeRecordedTitle: "Ixesha elibhalwe sisibali-xesha sephepha",
+    overTimeScoringNote: "Amanqaku okudlula ixesha elimisiweyo asalungiswa zizazi zengqondo — ixesha liyabhalwa nokuba kunjalo.",
+    exit: "Phuma",
+    exitConfirm: "Uyaphuma kuhlolo? Inkqubela yakho sele igciniwe kwaye ungaqhubeka kamva.",
+    exitConfirmOffline: "Uyaphuma kuhlolo? Inkqubela yakho igcinwe kwesi sixhobo kwaye ungaqhubeka kamva, nokuba akukho nethiwekhi.",
+    notAgeSupported: "Amanqaku esi sikrini asekelwe kubudala agubungela abantwana abaneminyaka emi-5 nemi-6 — ixesha/inani eliluhlaza lisabhalwa kulo mntwana, kodwa akukho manqaku ali-0–2 anokufunyanwa ngokuzenzekelayo.",
+    checklistCount: "kuphawuliwe",
+    consentMissingTitle: "Akukho fomu yemvume kwirekhodi",
+    consentMissingBody: "Ifomu yemvume esayinwe ngumzali/umgcini iyafuneka phambi kokuba lo mntwana ahlolwe. Yiya kwi-Iklasi Yam, uvule irekhodi yalo mntwana, uze ulayishe enye — ungakhuphela nefomu engenanto ukuze uyithumele ekhaya.",
+    consentIncompleteTitle: "Ifomu yemvume ayiphelelanga",
+    consentVerifiedBadge: "Ifomu yemvume ikhona ✓",
+    priorScreenedOne: "Sele ehloliwe kanye ngaphambili",
+    priorScreenedMany: "Sele ehloliwe izihlandlo ezi-{n} ngaphambili",
+    mostRecent: "Okwamva nje:",
+    stillAwaitingReview: "(lusalinde uphononongo)",
+    loadingContent: "Ilayisha umxholo wesikrini…",
+    sectionTimer: "Isibali-xesha secandelo",
+    timerFor: "kwi-\"{label}\"",
+    overTimeLimit: "Lidlulile ixesha (umda yimizuzu eli-10)",
+    timerStart: "Qalisa", timerResume: "Qhubeka", timerPause: "Nqumama", timerReset: "Qala Kwakhona",
+    sessionTimerTitle: "Ixesha lilonke kolu hlolo, kuwo onke amacandelo",
+    errLoadChildren: "Ayikwazanga ukulayisha abantwana: ",
+    errStart: "Ayikwazanga ukuqalisa uhlolo: ",
+    errStartDevice: "Ayikwazanga ukuqalisa uhlolo kwesi sixhobo: ",
+    errSubmit: "Ayikwazanga ukungenisa uhlolo: ",
+    errSaveDevice: "Ayikwazanga ukugcina uhlolo kwesi sixhobo: ",
   },
 };
+
+// Fills "{name}"-style placeholders in a T string.
+function fill(str, vars) {
+  return str.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
+}
 
 // Collects every change made within `delay` ms and saves them together.
 // (It used to keep only the last call, so e.g. the puzzle timer's save
@@ -160,8 +316,13 @@ function formatTimer(ms) {
 // finished screening is queued to upload (with the psychologist's
 // notification) the next time there's signal. Everything else — questions,
 // scoring, timer, layout — is identical to online.
-export default function PuzzleBoxScreener({ user, profile, onExit, initialChild, offline }) {
-  const t = T.en;
+// `lang` = the teacher dashboard's current language; the screener starts in it
+// and has its own EN/AF/XH buttons (the dashboard's are hidden behind it).
+export default function PuzzleBoxScreener({ user, profile, onExit, initialChild, offline, lang: langProp }) {
+  const { lang: siteLang } = useLanguage();
+  const [lang, setLang] = useState(langProp || siteLang || "en");
+  const t = T[lang] || T.en;
+  const langSwitcher = <LanguageSwitcher lang={lang} onChange={setLang} />;
   const isOffline = !!offline;
   // Content — sections, questions, scoring tables — is admin-managed via
   // Admin → Screener Content (see supabase/migrations/007_screener_content.sql).
@@ -280,7 +441,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
       const { data, error: qErr } = await query;
       if (!active) return;
       if (qErr) {
-        setError("Could not load children: " + qErr.message);
+        setError(t.errLoadChildren + qErr.message);
         setChildren([]);
       } else {
         // Mapped to camelCase so selectedChild is shaped identically whether
@@ -405,7 +566,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
       try {
         await saveDraft(draft);
       } catch (e) {
-        setError("Could not start the screening on this device: " + e.message);
+        setError(t.errStartDevice + e.message);
         return;
       }
       draftRef.current = draft;
@@ -434,7 +595,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
       .single();
 
     if (insertErr) {
-      setError("Could not start the screening: " + insertErr.message);
+      setError(t.errStart + insertErr.message);
       return;
     }
     setSession(data);
@@ -749,7 +910,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
         await saveOfflineSession(record);
         await deleteDraft(selectedChild.id);
       } catch (e) {
-        setError("Could not save the screening on this device: " + e.message);
+        setError(t.errSaveDevice + e.message);
         return;
       }
       setShowSubmitConfirm(false);
@@ -775,7 +936,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
       .eq("id", session.id);
 
     if (submitErr) {
-      setError("Could not submit the screening: " + submitErr.message);
+      setError(t.errSubmit + submitErr.message);
       return;
     }
 
@@ -827,14 +988,14 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
         <div className="pbs-question-head">
           <div className="pbs-question-label">{q.label}</div>
           {q.id !== timerQuestion?.id && r.timeSeconds != null && (
-            <span className="pbs-question-time" title="Time recorded from the page timer">
+            <span className="pbs-question-time" title={t.timeRecordedTitle}>
               <Doodle name="stopwatch" size={16} inline /> {formatTimer(r.timeSeconds * 1000)}
             </span>
           )}
           {saveStatusBadgeFor(q.id)}
         </div>
         {q.instruction && <div className="pbs-question-instruction">{q.instruction}</div>}
-        {q.toPass && <div className="pbs-question-topass"><strong>To Pass:</strong> {q.toPass}</div>}
+        {q.toPass && <div className="pbs-question-topass"><strong>{t.toPass}</strong> {q.toPass}</div>}
 
         {q.scoringType === "binary" && (
           <div className="pbs-score-row">
@@ -884,7 +1045,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
             />
             <span>{t.sec}</span>
             {q.id === timerQuestion?.id && (
-              <span className="pbs-timer-sync-note">Synced with the puzzle timer →</span>
+              <span className="pbs-timer-sync-note">{t.syncedWithTimer}</span>
             )}
             {r.rawValueSeconds != null && (
               r.score != null
@@ -892,7 +1053,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
                 : <span className="pbs-computed-score pbs-computed-score-warn">{t.notAgeSupported}</span>
             )}
             {q.needsConfirmation && (
-              <div className="pbs-tbd-note">Scoring for going over the time limit is still being finalised by the psychologists — the time is recorded either way.</div>
+              <div className="pbs-tbd-note">{t.overTimeScoringNote}</div>
             )}
           </div>
         )}
@@ -929,7 +1090,10 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
       <div className="pbs-shell">
         <div className="pbs-topbar">
           <div className="pbs-topbar-title">{t.title}</div>
-          <button className="btn btn-ghost btn-sm" onClick={onExit}>{t.exit}</button>
+          <div className="pbs-topbar-right">
+            {langSwitcher}
+            <button className="btn btn-ghost btn-sm" onClick={onExit}>{t.exit}</button>
+          </div>
         </div>
         <div className="pbs-body pbs-body-narrow">
           <SinglePuzzlePiece fill="#009B8D" opacity={0.08} rotate={12} className="pbs-hero-piece" />
@@ -983,7 +1147,10 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
       <div className="pbs-shell">
         <div className="pbs-topbar">
           <div className="pbs-topbar-title">{t.title}</div>
-          <button className="btn btn-ghost btn-sm" onClick={onExit}>{t.exit}</button>
+          <div className="pbs-topbar-right">
+            {langSwitcher}
+            <button className="btn btn-ghost btn-sm" onClick={onExit}>{t.exit}</button>
+          </div>
         </div>
         <div className="pbs-body pbs-body-narrow">
           <h2 className="pbs-h2">{t.confirmChild}</h2>
@@ -1015,12 +1182,12 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
           {priorScreenings.length > 0 && (
             <div className="card" style={{ marginTop: 12, padding: "12px 16px", background: "var(--teal-lt, #E6F7F5)" }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--teal)", marginBottom: 4 }}>
-                Already screened {priorScreenings.length} time{priorScreenings.length === 1 ? "" : "s"} before
+                {priorScreenings.length === 1 ? t.priorScreenedOne : fill(t.priorScreenedMany, { n: priorScreenings.length })}
               </div>
               <div style={{ fontSize: 12, color: "var(--ink-mid)" }}>
-                Most recent: {priorScreenings[0].completed_at ? new Date(priorScreenings[0].completed_at).toLocaleDateString() : "—"}
+                {t.mostRecent} {priorScreenings[0].completed_at ? new Date(priorScreenings[0].completed_at).toLocaleDateString() : "—"}
                 {priorScreenings[0].interpretation_band ? ` — ${priorScreenings[0].interpretation_band}` : ""}
-                {priorScreenings[0].status === "awaiting_review" ? " (still awaiting review)" : ""}
+                {priorScreenings[0].status === "awaiting_review" ? ` ${t.stillAwaitingReview}` : ""}
               </div>
             </div>
           )}
@@ -1045,14 +1212,15 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
     return (
       <div className="pbs-shell">
         <div className="pbs-body pbs-body-narrow pbs-submitted">
+          <LanguageSwitcher lang={lang} onChange={setLang} style={{ justifyContent: "center", marginBottom: 24 }} />
           <div className="pbs-submitted-icon">✓</div>
           <h2 className="pbs-h2">{t.submitted}</h2>
           <p className="pbs-sub">
             {isOffline
-              ? `${selectedChild?.name}'s screening ${t.submittedOffline}`
-              : `${selectedChild?.name} ${t.submittedSub} ${selectedChild?.school || "the child's record"}.`}
+              ? fill(t.submittedOffline, { name: selectedChild?.name })
+              : fill(t.submittedOnline, { name: selectedChild?.name, place: selectedChild?.school || t.submittedRecordFallback })}
           </p>
-          <p className="pbs-submitted-time">Total time taken: {formatTimer(sessionTimerMs)}</p>
+          <p className="pbs-submitted-time">{t.totalTimeTaken} {formatTimer(sessionTimerMs)}</p>
           <button className="btn btn-teal" onClick={onExit}>{t.submittedBackHome}</button>
         </div>
       </div>
@@ -1064,7 +1232,8 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
     return (
       <div className="pbs-shell">
         <div className="pbs-body pbs-body-narrow">
-          <p className="pbs-loading">Loading screener content…</p>
+          <LanguageSwitcher lang={lang} onChange={setLang} style={{ justifyContent: "center", marginBottom: 16 }} />
+          <p className="pbs-loading">{t.loadingContent}</p>
         </div>
       </div>
     );
@@ -1073,32 +1242,33 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
   return (
     <div className="pbs-shell">
       <div className={`pbs-timer-panel ${timerRunning ? "running" : ""}`}>
-        <div className="pbs-timer-label">Section timer</div>
+        <div className="pbs-timer-label">{t.sectionTimer}</div>
         <div className="pbs-timer-display">{formatTimer(timerMs)}</div>
-        {timerQuestion && <div className="pbs-timer-target">for "{timerQuestion.label}"</div>}
+        {timerQuestion && <div className="pbs-timer-target">{fill(t.timerFor, { label: timerQuestion.label })}</div>}
         {isPuzzleOverTime && (
           <div className="pbs-timer-target" style={{ color: "var(--pink)", fontWeight: 800 }}>
-            <Doodle name="warning" size={16} inline /> Over time (10 min limit)
+            <Doodle name="warning" size={16} inline /> {t.overTimeLimit}
           </div>
         )}
         <div className="pbs-timer-controls">
           {!timerRunning ? (
             <button className="btn btn-teal btn-sm" onClick={startTimer}>
-              {timerMs > 0 ? "Resume" : "Start"}
+              {timerMs > 0 ? t.timerResume : t.timerStart}
             </button>
           ) : (
-            <button className="btn pbs-btn-orange btn-sm" onClick={pauseTimer}>Pause</button>
+            <button className="btn pbs-btn-orange btn-sm" onClick={pauseTimer}>{t.timerPause}</button>
           )}
-          <button className="btn btn-ghost btn-sm" onClick={resetTimer} disabled={timerRunning}>Reset</button>
+          <button className="btn btn-ghost btn-sm" onClick={resetTimer} disabled={timerRunning}>{t.timerReset}</button>
         </div>
       </div>
       <div className="pbs-topbar">
         <div>
           <div className="pbs-topbar-title">{selectedChild.name}</div>
-          <div className="pbs-topbar-sub">{t.sectionOf} {sectionIndex + 1} {t.of} {sections.length} · {currentSection.title}</div>
+          <div className="pbs-topbar-sub">{fill(t.sectionProgress, { i: sectionIndex + 1, n: sections.length })} · {currentSection.title}</div>
         </div>
         <div className="pbs-topbar-right">
-          <span className="pbs-session-timer" title="Total time on this screening, across every section">
+          {langSwitcher}
+          <span className="pbs-session-timer" title={t.sessionTimerTitle}>
             <Doodle name="stopwatch" size={16} inline /> {formatTimer(sessionTimerMs)}
           </span>
           <span className={`pbs-save-indicator pbs-save-${saveStatus}`}>
@@ -1174,13 +1344,13 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
             </div>
             <p>
               {unansweredCount > 0
-                ? `${unansweredCount} ${t.submitConfirmBody}`
+                ? fill(t.submitConfirmBody, { n: unansweredCount })
                 : t.submitConfirmBodyComplete}
             </p>
             {error && <div className="pbs-error">{error}</div>}
             <div className="pbs-confirm-actions">
               <button className="btn btn-ghost" onClick={() => setShowSubmitConfirm(false)} disabled={submitting}>{t.cancel}</button>
-              <button className="btn btn-teal" onClick={doSubmit} disabled={submitting}>{submitting ? "Submitting…" : t.confirmSubmit}</button>
+              <button className="btn btn-teal" onClick={doSubmit} disabled={submitting}>{submitting ? t.submitting : t.confirmSubmit}</button>
             </div>
           </div>
         </div>

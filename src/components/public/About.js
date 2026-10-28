@@ -4,6 +4,7 @@ import {
   PuzzlePiece, SectionHeading, PageHero, Reveal,
   Navbar, Footer, CallToAction, useIsMobile,
 } from "../shared/SiteChrome";
+import { useLanguage } from "../../theme/LanguageContext";
 // Portrait from The Puzzle Project brief (March 2026).
 // Confirm with Gary that it can be used on the public site before going live.
 import gladysPortrait from "../../assets/gladys-khayalethu.jpg";
@@ -20,9 +21,216 @@ import {
 // literal white) so it stays a muted tone in dark mode, same as the home page.
 const ORANGE_LIGHT = `color-mix(in srgb, ${COLORS.orange} 10%, ${COLORS.white})`;
 
+// ---- Page copy in English, Afrikaans and isiXhosa ------------------------
+// Brand names (The Puzzle Project), people's names, place names, region names
+// and numbers stay the same in every language. Lists (stats, months,
+// outcomes, domains, research) are in the same order as the shared data below.
+const T = {
+  en: {
+    heroEyebrow: "About The Puzzle Project",
+    heroTitle: "The people behind",
+    heroHighlight: "the puzzles",
+    heroLead: "The Puzzle Project is a South African non-profit organisation dedicated to ensuring that every child has access to early developmental screening — regardless of where they live or go to school.",
+    portraitAlt: "Nomhamha Gladys Mfundisi waving, with the hills and homes of Khayalethu behind her",
+    portraitPlace: "Khayalethu, Eastern Cape",
+    startsEyebrow: "Where it starts",
+    startsIn: "It starts in places like ",
+    startsP1: "In rural communities across the Eastern Cape, children grow up surrounded by family, neighbours and teachers who want the best for them, but far from the specialists who could spot a developmental need early.",
+    startsP2: "The Puzzle Project is built for those communities: simple, playful tools that work in their languages and in their classrooms.",
+    problemEyebrow: "The challenge",
+    problemTitle: "The problem we solve",
+    problemLead: "In South Africa, the shortage of educational psychologists — particularly in rural and peri-urban areas — means that many children with cognitive or developmental challenges go unidentified until they fall significantly behind their peers. Early intervention is proven to dramatically improve long-term outcomes, yet access to screening remains inequitable.",
+    stats: [
+      { value: "1 : 12 000", label: "Psychologist-to-child ratio in rural South Africa" },
+      { value: "70%", label: "Of children never receive a formal developmental screen" },
+      { value: "Age 5–6", label: "Critical window for early intervention" },
+    ],
+    impactEyebrow: "Our impact",
+    impactTitle: "Every screening is a child given a head start",
+    impactLead: "See how The Puzzle Project is reaching communities across the Eastern Cape and helping learners grow.",
+    placeholderBadge: "Illustrative figures — verified programme data is on its way",
+    placeholderNote: "Illustrative figures shown while programme data is being verified.",
+    reachEyebrow: "Our reach",
+    reachLabel: "children screened this year (illustrative)",
+    reachSeries: "Children screened",
+    months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+    outcomesEyebrow: "Learner outcomes",
+    outcomesLabel: "of supported learners are showing progress (illustrative)",
+    outcomes: ["Back on track", "Improving with support", "Ongoing support"],
+    progressing: "progressing",
+    regionsEyebrow: "Communities reached",
+    regionsLabel: "Eastern Cape regions and growing (illustrative)",
+    mapAria: "Map of the Eastern Cape showing the regions The Puzzle Project reaches",
+    ocean: "Indian Ocean",
+    growthEyebrow: "Growth after support",
+    growthStat: "+25 pts",
+    growthLabel: "average gain from first screening to follow-up (illustrative)",
+    domains: ["Cognitive", "Fine motor", "Language", "Social", "Emotion", "Moral"],
+    firstScreening: "First screening",
+    afterSupport: "After support",
+    storyEyebrow: "How it began",
+    storyTitle: "Founding story",
+    storyP1: "Gary King founded The Puzzle Project after a 12-piece puzzle sparked an idea during his work as a movie director in the rural Eastern Cape: what if a single puzzle could screen broad areas of a child's development needing support?",
+    storyP2: "And so began a journey with Dr Rivca Marais and Dr Jennifer Jansen to explore what that simple puzzle could become — a play-based screening protocol built around puzzle activities that children engage with naturally. The digital platform was developed to scale this protocol across South Africa.",
+    quote: "No child should be left behind simply because their school couldn't afford a psychologist.",
+    quoteBy: "Gary King, Founder",
+    founderAlt: "Gary King, founder of The Puzzle Project",
+    teamEyebrow: "Our team",
+    teamTitle: "Built and maintained by a multidisciplinary team",
+    sealAlt: "University of Cape Town seal",
+    researchEyebrow: "Evidence base",
+    researchTitle: "Research background",
+    researchLead: "The screening protocol is grounded in peer-reviewed developmental psychology research.",
+    research: [
+      {
+        title: "Play-based developmental assessment",
+        desc: "The puzzle activities are adapted from standardised developmental milestone checklists used in clinical practice, mapped to domains including planning, sequencing, fine motor and problem-solving.",
+      },
+      {
+        title: "Longitudinal tracking",
+        desc: "The system enforces a minimum 2-month interval between comparative screenings, aligned with research showing meaningful developmental change occurs over this period in early childhood.",
+      },
+    ],
+  },
+  af: {
+    heroEyebrow: "Oor The Puzzle Project",
+    heroTitle: "Die mense agter",
+    heroHighlight: "die legkaarte",
+    heroLead: "The Puzzle Project is 'n Suid-Afrikaanse niewinsorganisasie wat wil verseker dat elke kind toegang tot vroeë ontwikkelingsifting het — ongeag waar hulle woon of skoolgaan.",
+    portraitAlt: "Nomhamha Gladys Mfundisi wat waai, met die heuwels en huise van Khayalethu agter haar",
+    portraitPlace: "Khayalethu, Oos-Kaap",
+    startsEyebrow: "Waar dit begin",
+    startsIn: "Dit begin op plekke soos ",
+    startsP1: "In plattelandse gemeenskappe regoor die Oos-Kaap word kinders groot omring deur familie, bure en onderwysers wat net die beste vir hulle wil hê, maar ver van die spesialiste wat 'n ontwikkelingsbehoefte vroeg kan raaksien.",
+    startsP2: "The Puzzle Project is vir daardie gemeenskappe gebou: eenvoudige, speelse hulpmiddels wat in hul tale en in hul klaskamers werk.",
+    problemEyebrow: "Die uitdaging",
+    problemTitle: "Die probleem wat ons oplos",
+    problemLead: "In Suid-Afrika beteken die tekort aan opvoedkundige sielkundiges — veral in plattelandse en buitestedelike gebiede — dat baie kinders met kognitiewe of ontwikkelingsuitdagings nie raakgesien word nie totdat hulle ver agter hul maats raak. Dit is bewys dat vroeë ingryping langtermynuitkomste dramaties verbeter, maar toegang tot sifting bly ongelyk.",
+    stats: [
+      { value: "1 : 12 000", label: "Verhouding van sielkundiges tot kinders op die Suid-Afrikaanse platteland" },
+      { value: "70%", label: "van kinders word nooit formeel vir ontwikkeling gesif nie" },
+      { value: "Ouderdom 5–6", label: "Die kritieke tydperk vir vroeë ingryping" },
+    ],
+    impactEyebrow: "Ons impak",
+    impactTitle: "Elke sifting is 'n kind wat 'n voorsprong kry",
+    impactLead: "Sien hoe The Puzzle Project gemeenskappe regoor die Oos-Kaap bereik en leerders help groei.",
+    placeholderBadge: "Illustratiewe syfers — geverifieerde programdata is op pad",
+    placeholderNote: "Illustratiewe syfers word gewys terwyl die programdata geverifieer word.",
+    reachEyebrow: "Ons bereik",
+    reachLabel: "kinders hierdie jaar gesif (illustratief)",
+    reachSeries: "Kinders gesif",
+    months: ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep"],
+    outcomesEyebrow: "Leerderuitkomste",
+    outcomesLabel: "van ondersteunde leerders toon vordering (illustratief)",
+    outcomes: ["Weer op koers", "Verbeter met ondersteuning", "Deurlopende ondersteuning"],
+    progressing: "vorder",
+    regionsEyebrow: "Gemeenskappe bereik",
+    regionsLabel: "Oos-Kaapse streke, en dit groei (illustratief)",
+    mapAria: "Kaart van die Oos-Kaap wat die streke wys wat The Puzzle Project bereik",
+    ocean: "Indiese Oseaan",
+    growthEyebrow: "Groei ná ondersteuning",
+    growthStat: "+25 punte",
+    growthLabel: "gemiddelde styging van eerste sifting tot opvolgsifting (illustratief)",
+    domains: ["Kognitief", "Fynmotories", "Taal", "Sosiaal", "Emosioneel", "Moreel"],
+    firstScreening: "Eerste sifting",
+    afterSupport: "Ná ondersteuning",
+    storyEyebrow: "Hoe dit begin het",
+    storyTitle: "Ons ontstaansverhaal",
+    storyP1: "Gary King het The Puzzle Project gestig nadat 'n legkaart van 12 stukke hom op 'n idee gebring het terwyl hy as filmregisseur op die Oos-Kaapse platteland gewerk het: wat as 'n enkele legkaart breë areas van 'n kind se ontwikkeling wat ondersteuning nodig het, kon uitsif?",
+    storyP2: "So het 'n reis saam met dr. Rivca Marais en dr. Jennifer Jansen begin om te verken wat daardie eenvoudige legkaart kon word — 'n speelgebaseerde siftingsprotokol rondom legkaart-aktiwiteite waarby kinders vanself betrokke raak. Die digitale platform is ontwikkel om hierdie protokol regoor Suid-Afrika uit te brei.",
+    quote: "Geen kind behoort agter te raak net omdat hul skool nie 'n sielkundige kon bekostig nie.",
+    quoteBy: "Gary King, stigter",
+    founderAlt: "Gary King, stigter van The Puzzle Project",
+    teamEyebrow: "Ons span",
+    teamTitle: "Gebou en onderhou deur 'n multidissiplinêre span",
+    sealAlt: "Die seël van die University of Cape Town",
+    researchEyebrow: "Bewysgrondslag",
+    researchTitle: "Navorsingsagtergrond",
+    researchLead: "Die siftingsprotokol is gegrond op portuurbeoordeelde navorsing in ontwikkelingsielkunde.",
+    research: [
+      {
+        title: "Speelgebaseerde ontwikkelingsassessering",
+        desc: "Die legkaart-aktiwiteite is aangepas uit gestandaardiseerde kontrolelyste vir ontwikkelingsmylpale wat in die kliniese praktyk gebruik word, en is gekoppel aan domeine soos beplanning, volgorde, fynmotoriek en probleemoplossing.",
+      },
+      {
+        title: "Opvolging oor tyd",
+        desc: "Die stelsel vereis minstens 2 maande tussen vergelykende siftings, in lyn met navorsing wat toon dat betekenisvolle ontwikkelingsverandering in die vroeë kinderjare oor hierdie tydperk plaasvind.",
+      },
+    ],
+  },
+  xh: {
+    heroEyebrow: "Malunga ne-The Puzzle Project",
+    heroTitle: "Abantu abasemva",
+    heroHighlight: "kweephazili",
+    heroLead: "The Puzzle Project ngumbutho ongenzi nzuzo waseMzantsi Afrika ozimisele ukuqinisekisa ukuba wonke umntwana uyakwazi ukufumana uhlolo lokukhula lwangethuba — nokuba uhlala phi na okanye ufunda kwesiphi na isikolo.",
+    portraitAlt: "UNomhamha Gladys Mfundisi ephakamisa isandla ebulisa, neenduli nezindlu zaseKhayalethu ngasemva kwakhe",
+    portraitPlace: "Khayalethu, eMpuma Koloni",
+    startsEyebrow: "Apho iqala khona",
+    startsIn: "Iqala kwiindawo ezifana ne",
+    startsP1: "Kwiindawo zasemaphandleni kulo lonke elaseMpuma Koloni, abantwana bakhula bejikelezwe ziintsapho, ngabamelwane nangootitshala abafuna okona kulungileyo kubo, kodwa bekude neengcali ezinokubona kwangethuba ukuba umntwana udinga uncedo ekukhuleni kwakhe.",
+    startsP2: "The Puzzle Project yakhelwe ezo ndawo: izixhobo ezilula nezonwabisayo ezisebenza ngeelwimi zabo nakumagumbi abo okufundela.",
+    problemEyebrow: "Umceli mngeni",
+    problemTitle: "Ingxaki esiyisombululayo",
+    problemLead: "EMzantsi Afrika, ukunqongophala kwezazi zengqondo kwezemfundo — ingakumbi kwiindawo zasemaphandleni nezikufutshane needolophu — kuthetha ukuba abantwana abaninzi abanobunzima bokuqonda okanye bokukhula abaqatshelwa de basale ngasemva kakhulu koontanga babo. Kungqinwe ukuba uncedo lwangethuba luphucula kakhulu iziphumo zexesha elide, kodwa ukufikelela kuhlolo akukalingani.",
+    stats: [
+      { value: "1 : 12 000", label: "Umlinganiselo wezazi zengqondo kubantwana kumaphandle aseMzantsi Afrika" },
+      { value: "70%", label: "yabantwana ayizange ifumane uhlolo olusesikweni lokukhula" },
+      { value: "Iminyaka 5–6", label: "Ixesha elibalulekileyo loncedo lwangethuba" },
+    ],
+    impactEyebrow: "Impembelelo yethu",
+    impactTitle: "Uhlolo ngalunye ngumntwana onikwa isiqalo esihle",
+    impactLead: "Bona indlela The Puzzle Project efikelela ngayo kwiindawo kulo lonke elaseMpuma Koloni nendlela encedisa ngayo abafundi ukuba bakhule.",
+    placeholderBadge: "Amanani angumzekelo — idatha eqinisekisiweyo yenkqubo isendleleni",
+    placeholderNote: "Kuboniswa amanani angumzekelo ngelixa idatha yenkqubo isaqinisekiswa.",
+    reachEyebrow: "Ukufikelela kwethu",
+    reachLabel: "abantwana abahlolwe kulo nyaka (umzekelo)",
+    reachSeries: "Abantwana abahlolweyo",
+    months: ["Jan", "Feb", "Mat", "Epr", "Mey", "Jun", "Jul", "Aga", "Sep"],
+    outcomesEyebrow: "Iziphumo zabafundi",
+    outcomesLabel: "yabafundi abaxhaswayo ibonisa inkqubela (umzekelo)",
+    outcomes: ["Babuyele endleleni", "Bayaphucuka ngenkxaso", "Inkxaso eqhubekayo"],
+    progressing: "bayaphucuka",
+    regionsEyebrow: "Iindawo esifikelele kuzo",
+    regionsLabel: "imimandla yaseMpuma Koloni, kwaye iyanda (umzekelo)",
+    mapAria: "Imaphu yaseMpuma Koloni ebonisa imimandla apho The Puzzle Project isebenza khona",
+    ocean: "ULwandlekazi lwaseIndiya",
+    growthEyebrow: "Ukukhula emva kwenkxaso",
+    growthStat: "+25 amanqaku",
+    growthLabel: "ukonyuka okuphakathi ukusuka kuhlolo lokuqala ukuya kuhlolo lokulandelela (umzekelo)",
+    domains: ["Ukuqonda", "Imisipha emincinci", "Ulwimi", "Ezentlalo", "Iimvakalelo", "Isimilo"],
+    firstScreening: "Uhlolo lokuqala",
+    afterSupport: "Emva kwenkxaso",
+    storyEyebrow: "Indlela eyaqala ngayo",
+    storyTitle: "Imbali yokusekwa kwethu",
+    storyP1: "UGary King waseka The Puzzle Project emva kokuba iphazili enamaqhekeza ali-12 imvuselele ingcamango ngexesha esebenza njengomlawuli weefilimu kumaphandle aseMpuma Koloni: kuthekani ukuba iphazili enye inokuhlola imimandla ebanzi yokukhula komntwana efuna inkxaso?",
+    storyP2: "Kwaqala ke uhambo noGqr Rivca Marais noGqr Jennifer Jansen lokuphonononga ukuba loo phazili ilula ingaba yintoni — inkqubo yohlolo esekelwe ekudlaleni, eyakhelwe kwimisebenzi yephazili abantwana abazibandakanya kuyo ngokwendalo. Iqonga ledijithali laphuhliswa ukuze le nkqubo isasazeke kulo lonke uMzantsi Afrika.",
+    quote: "Akukho mntwana ufanele ashiyeke ngasemva nje kuba isikolo sakhe besingenako ukuhlawula isazi sengqondo.",
+    quoteBy: "UGary King, uMseki",
+    founderAlt: "UGary King, owaseka The Puzzle Project",
+    teamEyebrow: "Iqela lethu",
+    teamTitle: "Yakhiwe kwaye igcinwa liqela leengcali kumacandelo ngamacandelo",
+    sealAlt: "Itywina le-University of Cape Town",
+    researchEyebrow: "Isiseko sobungqina",
+    researchTitle: "Imvelaphi yophando",
+    researchLead: "Inkqubo yohlolo isekelwe kuphando lwezengqondo ngokukhula kwabantwana oluphononongwe ziingcali.",
+    research: [
+      {
+        title: "Uvavanyo lokukhula olusekelwe ekudlaleni",
+        desc: "Imisebenzi yephazili ilungiswe kuluhlu lokujonga olusemgangathweni lwamanqanaba okukhula olusetyenziswa kwezonyango, yaye idityaniswe nemimandla efana nocwangciso, ulandelelwano, imisipha emincinci nokusombulula iingxaki.",
+      },
+      {
+        title: "Ukulandelela ixesha elide",
+        desc: "Inkqubo inyanzelisa ixesha leenyanga ezi-2 ubuncinane phakathi kohlolo lokuthelekisa, ngokuvumelana nophando olubonisa ukuba utshintsho olubalulekileyo ekukhuleni lwenzeka kweli xesha ebuntwaneni.",
+      },
+    ],
+  },
+};
+
 // ---- Where it starts: the portrait from the project brief -----------------
 function WhereItStarts() {
   const isMobile = useIsMobile(860);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   return (
     <section style={{ padding: isMobile ? "60px 22px 70px" : "90px 40px 110px", background: COLORS.white, overflow: "hidden" }}>
       <div style={{
@@ -37,24 +245,24 @@ function WhereItStarts() {
             boxShadow: "0 22px 50px rgba(60,40,20,0.16)", border: `1px solid ${COLORS.border}`,
           }}>
             <img src={gladysPortrait}
-              alt="Nomhamha Gladys Mfundisi waving, with the hills and homes of Khayalethu behind her"
+              alt={t.portraitAlt}
               loading="lazy"
               style={{ width: "100%", aspectRatio: "3 / 4", objectFit: "cover", borderRadius: 6, display: "block" }} />
             <figcaption style={{ marginTop: 14, textAlign: "center" }}>
               <span style={{ display: "block", fontFamily: FONTS.heading, fontSize: 16, fontWeight: 800, color: COLORS.ink }}>
                 Nomhamha Gladys Mfundisi
               </span>
-              <span style={{ fontSize: 13.5, color: COLORS.inkMid }}>Khayalethu, Eastern Cape</span>
+              <span style={{ fontSize: 13.5, color: COLORS.inkMid }}>{t.portraitPlace}</span>
             </figcaption>
           </figure>
         </Reveal>
 
         <Reveal delay={0.12} style={{ textAlign: isMobile ? "center" : "left" }}>
           <p style={{ color: COLORS.teal, textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.12em", marginBottom: 14, fontSize: 12 }}>
-            Where it starts
+            {t.startsEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(28px, 3.6vw, 46px)", color: COLORS.ink, lineHeight: 1.1, marginBottom: 22, fontWeight: 900, letterSpacing: "-0.02em" }}>
-            It starts in places like{" "}
+            {t.startsIn}
             <span style={{ position: "relative", whiteSpace: "nowrap", zIndex: 0 }}>
               Khayalethu
               <svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"
@@ -65,13 +273,10 @@ function WhereItStarts() {
           </h2>
           {/* Placeholder copy: check the wording with Gary */}
           <p style={{ color: COLORS.inkMid, lineHeight: 1.85, marginBottom: 16, fontSize: 16.5, maxWidth: 520, marginLeft: isMobile ? "auto" : 0, marginRight: isMobile ? "auto" : 0 }}>
-            In rural communities across the Eastern Cape, children grow up surrounded by family,
-            neighbours and teachers who want the best for them, but far from the specialists who
-            could spot a developmental need early.
+            {t.startsP1}
           </p>
           <p style={{ color: COLORS.inkMid, lineHeight: 1.85, fontSize: 16.5, maxWidth: 520, marginLeft: isMobile ? "auto" : 0, marginRight: isMobile ? "auto" : 0 }}>
-            The Puzzle Project is built for those communities: simple, playful tools that work in
-            their languages and in their classrooms.
+            {t.startsP2}
           </p>
         </Reveal>
       </div>
@@ -80,23 +285,23 @@ function WhereItStarts() {
 }
 
 // ---- The challenge: big numbers, no boxes --------------------------------
-const PROBLEM_STATS = [
-  { value: "1 : 12 000", label: "Psychologist-to-child ratio in rural South Africa", color: COLORS.teal },
-  { value: "70%", label: "Of children never receive a formal developmental screen", color: COLORS.pink },
-  { value: "Age 5–6", label: "Critical window for early intervention", color: COLORS.purple },
-];
+// Colours are shared; values and labels come from T[lang].stats (same order).
+const PROBLEM_STAT_COLORS = [COLORS.teal, COLORS.pink, COLORS.purple];
 
 function ProblemSection() {
   const isMobile = useIsMobile(760);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
+  const stats = t.stats.map((stat, i) => ({ ...stat, color: PROBLEM_STAT_COLORS[i] }));
   return (
     <section style={{ padding: isMobile ? "64px 22px" : "100px 40px", background: COLORS.white }}>
       <div style={{ maxWidth: 1100, margin: "auto" }}>
         <Reveal>
           <SectionHeading
             align="center"
-            eyebrow="The challenge"
-            title="The problem we solve"
-            lead="In South Africa, the shortage of educational psychologists — particularly in rural and peri-urban areas — means that many children with cognitive or developmental challenges go unidentified until they fall significantly behind their peers. Early intervention is proven to dramatically improve long-term outcomes, yet access to screening remains inequitable."
+            eyebrow={t.problemEyebrow}
+            title={t.problemTitle}
+            lead={t.problemLead}
             maxWidth={760}
           />
         </Reveal>
@@ -104,7 +309,7 @@ function ProblemSection() {
           display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
           gap: isMobile ? 34 : 0, marginTop: 10,
         }}>
-          {PROBLEM_STATS.map((stat, i) => (
+          {stats.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 0.12} style={{
               textAlign: "center", padding: isMobile ? 0 : "10px 30px",
               borderLeft: !isMobile && i > 0 ? `1.5px dashed ${COLORS.border}` : "none",
@@ -127,18 +332,14 @@ function ProblemSection() {
 const SHOW_PLACEHOLDER_NOTE = true;
 const ORANGE = "#F26522";
 
-const IMPACT_TREND = [
-  { month: "Jan", children: 120 }, { month: "Feb", children: 260 },
-  { month: "Mar", children: 430 }, { month: "Apr", children: 640 },
-  { month: "May", children: 880 }, { month: "Jun", children: 1150 },
-  { month: "Jul", children: 1480 }, { month: "Aug", children: 1830 },
-  { month: "Sep", children: 2240 },
-];
+// Month labels come from T[lang].months (Jan to Sep, same order).
+const IMPACT_TREND = [120, 260, 430, 640, 880, 1150, 1480, 1830, 2240];
 
+// Outcome names come from T[lang].outcomes (same order).
 const IMPACT_OUTCOMES = [
-  { name: "Back on track", value: 58, color: COLORS.teal },
-  { name: "Improving with support", value: 29, color: ORANGE },
-  { name: "Ongoing support", value: 13, color: COLORS.pink },
+  { value: 58, color: COLORS.teal },
+  { value: 29, color: ORANGE },
+  { value: 13, color: COLORS.pink },
 ];
 
 // lon / lat are approximate region centres, used to place pins on the map.
@@ -151,13 +352,14 @@ const IMPACT_REGIONS = [
   { name: "Sarah Baartman", value: 170, color: COLORS.purple, lon: 25.4, lat: -33.1, label: "below" },
 ];
 
+// Domain names come from T[lang].domains (same order).
 const IMPACT_GROWTH = [
-  { domain: "Cognitive", first: 43, after: 68 },
-  { domain: "Fine motor", first: 45, after: 71 },
-  { domain: "Language", first: 43, after: 66 },
-  { domain: "Social", first: 41, after: 69 },
-  { domain: "Emotion", first: 44, after: 72 },
-  { domain: "Moral", first: 39, after: 64 },
+  { first: 43, after: 68 },
+  { first: 45, after: 71 },
+  { first: 43, after: 66 },
+  { first: 41, after: 69 },
+  { first: 44, after: 72 },
+  { first: 39, after: 64 },
 ];
 
 function ImpactTooltip({ active, payload, label, unit = "" }) {
@@ -230,12 +432,14 @@ const EC_PATH =
 
 function EasternCapeMap({ isMobile }) {
   const [active, setActive] = useState(null);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   const max = Math.max(...IMPACT_REGIONS.map((r) => r.value));
 
   return (
     <div>
       <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} style={{ width: "100%", height: "auto", display: "block" }}
-        role="img" aria-label="Map of the Eastern Cape showing the regions The Puzzle Project reaches">
+        role="img" aria-label={t.mapAria}>
         <defs>
           <linearGradient id="ecLand" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#FFE9F1" />
@@ -243,7 +447,7 @@ function EasternCapeMap({ isMobile }) {
           </linearGradient>
         </defs>
         <rect x="0" y="0" width={MAP_W} height={MAP_H} rx="22" fill="#EAF6F8" />
-        <text x={MAP_W - 30} y={MAP_H - 24} textAnchor="end" fontSize="15" fontStyle="italic" fill="#8DB9C2">Indian Ocean</text>
+        <text x={MAP_W - 30} y={MAP_H - 24} textAnchor="end" fontSize="15" fontStyle="italic" fill="#8DB9C2">{t.ocean}</text>
         <path d={EC_PATH} fill="url(#ecLand)" stroke={COLORS.pink} strokeWidth="3" strokeLinejoin="round" />
 
         {IMPACT_REGIONS.map((r, i) => {
@@ -293,6 +497,11 @@ function ImpactSection() {
   const isMobile = useIsMobile(860);
   const chartH = isMobile ? 260 : 320;
   const axis = { fontSize: 12, fill: COLORS.inkMid };
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
+  const trend = IMPACT_TREND.map((children, i) => ({ month: t.months[i], children }));
+  const outcomes = IMPACT_OUTCOMES.map((o, i) => ({ ...o, name: t.outcomes[i] }));
+  const growth = IMPACT_GROWTH.map((g, i) => ({ ...g, domain: t.domains[i] }));
 
   return (
     <section style={{
@@ -303,17 +512,17 @@ function ImpactSection() {
       <div style={{ maxWidth: 1180, margin: "auto", position: "relative" }}>
         <Reveal style={{ textAlign: "center", marginBottom: isMobile ? 40 : 60 }}>
           <p style={{ color: COLORS.pink, textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.12em", fontSize: 12, marginBottom: 14 }}>
-            Our impact
+            {t.impactEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(30px, 4vw, 52px)", color: COLORS.ink, fontWeight: 900, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 18 }}>
-            Every screening is a child given a head start
+            {t.impactTitle}
           </h2>
           <p style={{ color: COLORS.inkMid, fontSize: 17, lineHeight: 1.75, maxWidth: 640, margin: "0 auto" }}>
-            See how The Puzzle Project is reaching communities across the Eastern Cape and helping learners grow.
+            {t.impactLead}
           </p>
           {SHOW_PLACEHOLDER_NOTE && (
             <p style={{ display: "inline-block", marginTop: 18, padding: "7px 16px", borderRadius: 999, background: COLORS.white, border: `1.5px dashed ${COLORS.pink}`, color: COLORS.pink, fontSize: 12.5, fontWeight: 800 }}>
-              Illustrative figures — verified programme data is on its way
+              {t.placeholderBadge}
             </p>
           )}
         </Reveal>
@@ -321,9 +530,9 @@ function ImpactSection() {
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 22 : 30 }}>
 
           {/* 1. Reach over time */}
-          <ImpactCard eyebrow="Our reach" stat="2,240+" statLabel="children screened this year (illustrative)" color={COLORS.teal}>
+          <ImpactCard eyebrow={t.reachEyebrow} stat="2,240+" statLabel={t.reachLabel} color={COLORS.teal}>
             <ResponsiveContainer width="100%" height={chartH}>
-              <AreaChart data={IMPACT_TREND} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+              <AreaChart data={trend} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="impactArea" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={COLORS.teal} stopOpacity={0.55} />
@@ -334,7 +543,7 @@ function ImpactSection() {
                 <XAxis dataKey="month" tick={axis} axisLine={false} tickLine={false} />
                 <YAxis tick={axis} axisLine={false} tickLine={false} />
                 <Tooltip content={<ImpactTooltip />} />
-                <Area type="monotone" dataKey="children" name="Children screened" stroke={COLORS.teal} strokeWidth={4}
+                <Area type="monotone" dataKey="children" name={t.reachSeries} stroke={COLORS.teal} strokeWidth={4}
                   fill="url(#impactArea)" dot={{ r: 4, fill: COLORS.white, stroke: COLORS.teal, strokeWidth: 3 }}
                   activeDot={{ r: 7 }} animationDuration={1600} />
               </AreaChart>
@@ -342,14 +551,14 @@ function ImpactSection() {
           </ImpactCard>
 
           {/* 2. Outcomes donut */}
-          <ImpactCard eyebrow="Learner outcomes" stat="87%" statLabel="of supported learners are showing progress (illustrative)" color={COLORS.purple} delay={0.1}>
+          <ImpactCard eyebrow={t.outcomesEyebrow} stat="87%" statLabel={t.outcomesLabel} color={COLORS.purple} delay={0.1}>
             <div style={{ position: "relative" }}>
               <ResponsiveContainer width="100%" height={chartH}>
                 <PieChart>
-                  <Pie data={IMPACT_OUTCOMES} dataKey="value" nameKey="name" cx="50%" cy="46%"
+                  <Pie data={outcomes} dataKey="value" nameKey="name" cx="50%" cy="46%"
                     innerRadius={isMobile ? 62 : 80} outerRadius={isMobile ? 92 : 118}
                     paddingAngle={4} cornerRadius={10} stroke="none" animationDuration={1600}>
-                    {IMPACT_OUTCOMES.map((o) => <Cell key={o.name} fill={o.color} />)}
+                    {outcomes.map((o) => <Cell key={o.name} fill={o.color} />)}
                   </Pie>
                   <Tooltip content={<ImpactTooltip unit="%" />} />
                   <Legend iconType="circle" iconSize={11} wrapperStyle={{ fontSize: 13, color: COLORS.inkMid, paddingTop: 6 }} />
@@ -360,27 +569,27 @@ function ImpactSection() {
                 textAlign: "center", pointerEvents: "none",
               }}>
                 <div style={{ fontFamily: FONTS.heading, fontWeight: 900, fontSize: isMobile ? 26 : 32, color: COLORS.ink, lineHeight: 1 }}>87%</div>
-                <div style={{ fontSize: 12, color: COLORS.inkMid, fontWeight: 700, marginTop: 4 }}>progressing</div>
+                <div style={{ fontSize: 12, color: COLORS.inkMid, fontWeight: 700, marginTop: 4 }}>{t.progressing}</div>
               </div>
             </div>
           </ImpactCard>
 
           {/* 3. Regions map */}
-          <ImpactCard eyebrow="Communities reached" stat="6" statLabel="Eastern Cape regions and growing (illustrative)" color={COLORS.pink} delay={0.05}>
+          <ImpactCard eyebrow={t.regionsEyebrow} stat="6" statLabel={t.regionsLabel} color={COLORS.pink} delay={0.05}>
             <EasternCapeMap isMobile={isMobile} />
           </ImpactCard>
 
           {/* 4. Growth after support */}
-          <ImpactCard eyebrow="Growth after support" stat="+25 pts" statLabel="average gain from first screening to follow-up (illustrative)" color={ORANGE} delay={0.15}>
+          <ImpactCard eyebrow={t.growthEyebrow} stat={t.growthStat} statLabel={t.growthLabel} color={ORANGE} delay={0.15}>
             <ResponsiveContainer width="100%" height={chartH}>
-              <BarChart data={IMPACT_GROWTH} margin={{ top: 10, right: 6, left: -18, bottom: 0 }} barGap={4}>
+              <BarChart data={growth} margin={{ top: 10, right: 6, left: -18, bottom: 0 }} barGap={4}>
                 <CartesianGrid strokeDasharray="4 6" stroke="rgba(0,0,0,0.07)" vertical={false} />
                 <XAxis dataKey="domain" tick={{ ...axis, fontSize: isMobile ? 10 : 12 }} axisLine={false} tickLine={false} interval={0} />
                 <YAxis tick={axis} axisLine={false} tickLine={false} domain={[0, 100]} />
                 <Tooltip content={<ImpactTooltip unit="%" />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
                 <Legend iconType="circle" iconSize={11} wrapperStyle={{ fontSize: 13, color: COLORS.inkMid }} />
-                <Bar dataKey="first" name="First screening" fill="#D9D3E6" radius={[8, 8, 0, 0]} maxBarSize={22} animationDuration={1400} />
-                <Bar dataKey="after" name="After support" fill={ORANGE} radius={[8, 8, 0, 0]} maxBarSize={22} animationDuration={1800} />
+                <Bar dataKey="first" name={t.firstScreening} fill="#D9D3E6" radius={[8, 8, 0, 0]} maxBarSize={22} animationDuration={1400} />
+                <Bar dataKey="after" name={t.afterSupport} fill={ORANGE} radius={[8, 8, 0, 0]} maxBarSize={22} animationDuration={1800} />
               </BarChart>
             </ResponsiveContainer>
           </ImpactCard>
@@ -388,7 +597,7 @@ function ImpactSection() {
 
         {SHOW_PLACEHOLDER_NOTE && (
           <p style={{ textAlign: "center", marginTop: 28, fontSize: 12.5, color: COLORS.inkMid, opacity: 0.8 }}>
-            Illustrative figures shown while programme data is being verified.
+            {t.placeholderNote}
           </p>
         )}
       </div>
@@ -399,28 +608,30 @@ function ImpactSection() {
 // ---- Founding story: photo, words and a big quote ------------------------
 function FoundingStory() {
   const isMobile = useIsMobile(1000);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   const hero = `${process.env.PUBLIC_URL || ""}/gary-king-hero.jpg`;
   const para = { color: "rgba(255,255,255,0.93)", lineHeight: 1.75, fontSize: 15.5 };
   const copy = (
     <>
       <p style={{ textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.12em", marginBottom: 12, fontSize: 12, color: "rgba(255,255,255,0.8)" }}>
-        How it began
+        {t.storyEyebrow}
       </p>
       <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(30px, 3.6vw, 48px)", color: "#fff", lineHeight: 1.1, marginBottom: 18, fontWeight: 800, letterSpacing: "-0.02em" }}>
-        Founding story
+        {t.storyTitle}
       </h2>
       <p style={{ ...para, marginBottom: 12 }}>
-        Gary King founded The Puzzle Project after a 12-piece puzzle sparked an idea during his work as a movie director in the rural Eastern Cape: what if a single puzzle could screen broad areas of a child's development needing support?
+        {t.storyP1}
       </p>
       <p style={para}>
-        And so began a journey with Dr Rivca Marais and Dr Jennifer Jansen to explore what that simple puzzle could become — a play-based screening protocol built around puzzle activities that children engage with naturally. The digital platform was developed to scale this protocol across South Africa.
+        {t.storyP2}
       </p>
       {/* Pull quote, kept inside the portrait */}
       <div style={{ marginTop: 26, paddingTop: 22, borderTop: "1px solid rgba(255,255,255,0.28)" }}>
         <p style={{ fontFamily: FONTS.heading, fontSize: "clamp(18px, 1.9vw, 25px)", fontWeight: 700, color: "#fff", lineHeight: 1.3, letterSpacing: "-0.01em", marginBottom: 10 }}>
-          <span aria-hidden="true" style={{ color: WARM_YELLOW }}>“</span>No child should be left behind simply because their school couldn't afford a psychologist.<span aria-hidden="true" style={{ color: WARM_YELLOW }}>”</span>
+          <span aria-hidden="true" style={{ color: WARM_YELLOW }}>“</span>{t.quote}<span aria-hidden="true" style={{ color: WARM_YELLOW }}>”</span>
         </p>
-        <p style={{ fontSize: 13.5, color: WARM_YELLOW, fontWeight: 800 }}>Gary King, Founder</p>
+        <p style={{ fontSize: 13.5, color: WARM_YELLOW, fontWeight: 800 }}>{t.quoteBy}</p>
       </div>
     </>
   );
@@ -428,7 +639,7 @@ function FoundingStory() {
   if (isMobile) {
     return (
       <section style={{ background: "#3d3d3d", color: "#fff" }}>
-        <img src={hero} alt="Gary King, founder of The Puzzle Project"
+        <img src={hero} alt={t.founderAlt}
           style={{ display: "block", width: "100%", height: "auto" }} />
         <div style={{ padding: "40px 22px 56px", maxWidth: 640, margin: "0 auto" }}>
           <Reveal>{copy}</Reveal>
@@ -439,7 +650,7 @@ function FoundingStory() {
   return (
     <section style={{ position: "relative", overflow: "hidden", color: "#fff", background: "#3d3d3d", aspectRatio: "1800 / 910", minHeight: 640 }}>
       {/* the whole portrait, never cropped at the head */}
-      <img src={hero} alt="Gary King, founder of The Puzzle Project"
+      <img src={hero} alt={t.founderAlt}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "75% top" }} />
       <div aria-hidden="true" style={{
         position: "absolute", inset: 0,
@@ -458,17 +669,19 @@ const TEAM = [
   { initials: "RM", name: "Dr Rivca Marais",  color: COLORS.pink, bg: COLORS.pinkLight, image: "/rivca.jpeg", imageAlt: "Rivca Marais", imageFit: "cover", imagePosition: "center 20%" },
   { initials: "JJ", name: "Dr Jennifer Jansen",  color: COLORS.purple, bg: COLORS.purpleLight, image: "/jenny.jpeg", imageAlt: "Jennifer Jansen", imageFit: "cover", imagePosition: "center 30%" },
   { initials: "SF", name: "Ms Satara Ferreira",  color: COLORS.maroon, bg: COLORS.maroonLight, image: "/satara.jpeg", imageAlt: "Satara Ferreira", imageFit: "cover", imagePosition: "center 20%" },
-  { initials: "T19", name: "UCT INF3003W Team 19", color: COLORS.teal, bg: COLORS.tealLight, image: "/uct-seal.jpg", imageAlt: "University of Cape Town seal", imageFit: "contain", imagePosition: "center" },
-  { initials: "UCT", name: "UCT INF3011F Team 11 and Team 18",  color: COLORS.purple, bg: COLORS.purpleLight, image: "/uct-seal.jpg", imageAlt: "University of Cape Town seal", imageFit: "contain", imagePosition: "center" },
+  { initials: "T19", name: "UCT INF3003W Team 19", color: COLORS.teal, bg: COLORS.tealLight, image: "/uct-seal.jpg", seal: true, imageFit: "contain", imagePosition: "center" },
+  { initials: "UCT", name: "UCT INF3011F Team 11 and Team 18",  color: COLORS.purple, bg: COLORS.purpleLight, image: "/uct-seal.jpg", seal: true, imageFit: "contain", imagePosition: "center" },
 ];
 
 function TeamSection() {
   const isMobile = useIsMobile(640);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   return (
     <section style={{ padding: isMobile ? "64px 22px" : "100px 40px", background: ORANGE_LIGHT }}>
       <div style={{ maxWidth: 1100, margin: "auto" }}>
         <Reveal>
-          <SectionHeading align="center" eyebrow="Our team" title="Built and maintained by a multidisciplinary team" maxWidth={640} />
+          <SectionHeading align="center" eyebrow={t.teamEyebrow} title={t.teamTitle} maxWidth={640} />
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: isMobile ? "34px 16px" : "48px 30px" }}>
           {TEAM.map((member, i) => (
@@ -484,7 +697,7 @@ function TeamSection() {
                 {member.initials}
                 {member.image && <img
                   src={member.image}
-                  alt={member.imageAlt}
+                  alt={member.seal ? t.sealAlt : member.imageAlt}
                   onError={(event) => { event.currentTarget.style.display = "none"; }}
                   style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: member.imageFit, objectPosition: member.imagePosition, background: COLORS.white }}
                 />}
@@ -499,35 +712,28 @@ function TeamSection() {
 }
 
 // ---- Research background: two side-by-side notes ------------------------
-const RESEARCH = [
-  {
-    title: "Play-based developmental assessment",
-    color: COLORS.teal,
-    desc: "The puzzle activities are adapted from standardised developmental milestone checklists used in clinical practice, mapped to domains including planning, sequencing, fine motor and problem-solving.",
-  },
-  {
-    title: "Longitudinal tracking",
-    color: COLORS.purple,
-    desc: "The system enforces a minimum 2-month interval between comparative screenings, aligned with research showing meaningful developmental change occurs over this period in early childhood.",
-  },
-];
+// Colours are shared; titles and text come from T[lang].research (same order).
+const RESEARCH_COLORS = [COLORS.teal, COLORS.purple];
 
 function ResearchSection() {
   const isMobile = useIsMobile(760);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
+  const research = t.research.map((item, i) => ({ ...item, color: RESEARCH_COLORS[i] }));
   return (
     <section style={{ padding: isMobile ? "64px 22px" : "100px 40px", background: CREAM }}>
       <div style={{ maxWidth: 1100, margin: "auto" }}>
         <Reveal>
           <SectionHeading
             align="center"
-            eyebrow="Evidence base"
-            title="Research background"
-            lead="The screening protocol is grounded in peer-reviewed developmental psychology research."
+            eyebrow={t.researchEyebrow}
+            title={t.researchTitle}
+            lead={t.researchLead}
             maxWidth={600}
           />
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 22 }}>
-          {RESEARCH.map((item, i) => (
+          {research.map((item, i) => (
             <Reveal key={item.title} delay={i * 0.12}>
               <div className="soft-card" style={{ height: "100%", padding: isMobile ? "30px 26px" : "38px 36px", borderRadius: 28, background: COLORS.white }}>
                 <PuzzlePiece size={40} color={item.color} fillOpacity={1} rotate={i ? 12 : -10} style={{ marginBottom: 18 }} />
@@ -544,16 +750,18 @@ function ResearchSection() {
 
 export default function About({ onNavigateToLogin, onNavigate }) {
   const go = onNavigate || (() => console.warn("No onNavigate handler passed to About"));
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
 
   return (
     <div style={{ fontFamily: FONTS.body }}>
       <style>{`${PUBLIC_FONT_IMPORT}${WARM_PAGE_CSS}`}</style>
       <Navbar site="tpp" current="about" onNavigate={go} onLoginClick={() => onNavigateToLogin()} />
       <PageHero
-        eyebrow="About The Puzzle Project"
-        title="The people behind"
-        highlight="the puzzles"
-        lead="The Puzzle Project is a South African non-profit organisation dedicated to ensuring that every child has access to early developmental screening — regardless of where they live or go to school."
+        eyebrow={t.heroEyebrow}
+        title={t.heroTitle}
+        highlight={t.heroHighlight}
+        lead={t.heroLead}
       />
       <WhereItStarts />
       <ProblemSection />

@@ -1,5 +1,74 @@
 import React, { useState, useEffect, useRef } from "react";
 import ThemeToggle from "../../theme/ThemeToggle";
+import { useLanguage, LanguageSwitcher } from "../../theme/LanguageContext";
+
+// UI text for the shared public-site chrome (nav, footer, call-to-action...)
+// in English, Afrikaans and isiXhosa. Brand names, people's names, email
+// addresses and phone numbers stay as they are in every language.
+const T = {
+  en: {
+    navHome: "Home", navAbout: "About", navDonate: "Donate",
+    navPbHome: "Puzzle Box Home", navPpHome: "Puzzle Play Home",
+    navHow: "How it works", navTraining: "Training", navPurchase: "Purchase",
+    login: "Login", openMenu: "Open menu", closeMenu: "Close menu",
+    homeAria: (name) => `${name} home`,
+    footOrg: "Organisation", footProducts: "Our products", footPlatform: "Platform",
+    aboutUs: "About Us", supportWork: "Support Our Work", contact: "Contact",
+    trainingModules: "Training Modules",
+    footBlurb: "Supporting early childhood development across South Africa through accessible, culturally relevant, play-based screening tools.",
+    contactPerson: "Contact Gary King",
+    rights: "All rights reserved.",
+    ip: "Intellectual property of Dr R. Marais & Dr J. Jansen (2025)",
+    ctaTitle: "Together we can give every child the opportunity to thrive.",
+    ctaBody: "Whether you are an educator, therapist, school, researcher or partner organisation, your involvement helps us create brighter futures for children across South Africa.",
+    contactUs: "Contact Us",
+    photo: "Photo",
+    playVideo: "Play background video", pauseVideo: "Pause background video",
+  },
+  af: {
+    navHome: "Tuis", navAbout: "Oor Ons", navDonate: "Skenk",
+    navPbHome: "Puzzle Box Tuis", navPpHome: "Puzzle Play Tuis",
+    navHow: "Hoe dit werk", navTraining: "Opleiding", navPurchase: "Koop",
+    login: "Teken In", openMenu: "Maak spyskaart oop", closeMenu: "Maak spyskaart toe",
+    homeAria: (name) => `${name} tuisblad`,
+    footOrg: "Organisasie", footProducts: "Ons produkte", footPlatform: "Platform",
+    aboutUs: "Oor Ons", supportWork: "Ondersteun Ons Werk", contact: "Kontak",
+    trainingModules: "Opleidingsmodules",
+    footBlurb: "Ons ondersteun vroeë kinderontwikkeling regoor Suid-Afrika met toeganklike, kultureel relevante sifting-instrumente wat op spel gebaseer is.",
+    contactPerson: "Kontak Gary King",
+    rights: "Alle regte voorbehou.",
+    ip: "Intellektuele eiendom van dr. R. Marais & dr. J. Jansen (2025)",
+    ctaTitle: "Saam kan ons elke kind die geleentheid gee om te floreer.",
+    ctaBody: "Of jy nou 'n onderwyser, terapeut, skool, navorser of vennootorganisasie is, jou betrokkenheid help ons om 'n beter toekoms vir kinders regoor Suid-Afrika te bou.",
+    contactUs: "Kontak Ons",
+    photo: "Foto",
+    playVideo: "Speel agtergrondvideo", pauseVideo: "Onderbreek agtergrondvideo",
+  },
+  xh: {
+    navHome: "Ekhaya", navAbout: "Malunga Nathi", navDonate: "Nikela",
+    navPbHome: "Ikhaya lePuzzle Box", navPpHome: "Ikhaya lePuzzle Play",
+    navHow: "Indlela esebenza ngayo", navTraining: "Uqeqesho", navPurchase: "Thenga",
+    login: "Ngena", openMenu: "Vula imenyu", closeMenu: "Vala imenyu",
+    homeAria: (name) => `Ikhaya: ${name}`,
+    footOrg: "Umbutho", footProducts: "Iimveliso zethu", footPlatform: "Iqonga",
+    aboutUs: "Malunga Nathi", supportWork: "Xhasa Umsebenzi Wethu", contact: "Qhagamshelana Nathi",
+    trainingModules: "Iimodyuli Zoqeqesho",
+    footBlurb: "Sixhasa uphuhliso lwabantwana abasakhulayo kuwo wonke uMzantsi Afrika ngezixhobo zohlolo ezifikelelekayo, ezihambelana neenkcubeko nezisekelwe kumdlalo.",
+    contactPerson: "Qhagamshelana noGary King",
+    rights: "Onke amalungelo agciniwe.",
+    ip: "Ipropati yengqondo kaGqr R. Marais noGqr J. Jansen (2025)",
+    ctaTitle: "Kunye singamnika wonke umntwana ithuba lokukhula kakuhle.",
+    ctaBody: "Nokuba ungutitshala, uyingcali yonyango, isikolo, umphandi okanye umbutho oliqabane, ukuzibandakanya kwakho kusinceda sakhe ikamva eliqaqambileyo labantwana kuwo wonke uMzantsi Afrika.",
+    contactUs: "Qhagamshelana Nathi",
+    photo: "Ifoto",
+    playVideo: "Dlala ividiyo engasemva", pauseVideo: "Misa ividiyo engasemva",
+  },
+};
+
+function useT() {
+  const { lang } = useLanguage();
+  return T[lang] || T.en;
+}
 
 // Shared design tokens and page chrome for every public-facing page.
 // Homepage, About, HowItWorks and Trainingpage all import from here so the
@@ -199,8 +268,10 @@ let clipCounter = 0;
  */
 export function PuzzlePhoto({
   src, alt = "", size = 260, edges, rotate = 0, style = {},
-  label = "Photo", color = COLORS.teal, showBorder = true,
+  label: labelProp, color = COLORS.teal, showBorder = true,
 }) {
+  const t = useT();
+  const label = labelProp === undefined ? t.photo : labelProp;
   const [clipId] = useState(() => `puzzle-clip-${++clipCounter}`);
   const d = edges ? piecePath(edges) : CLASSIC_PIECE;
   const box = PIECE_BODY + PIECE_PAD * 2;
@@ -401,29 +472,31 @@ export function BrandLogo({ site = "tpp", height = 115, width = 125, onDark = fa
 }
 
 // Which pages appear in the navigation bar of each site (Login is always the
-// button on the right). Page keys are handled in App.js.
+// button on the right). Page keys are handled in App.js. Brand names use
+// `label` (the same in every language); everything else uses `labelKey`,
+// looked up in T for the current language.
 const NAV_BY_SITE = {
   tpp: [
-    { label: "Home", page: "home" },
-    { label: "About", page: "about" },
+    { labelKey: "navHome", page: "home" },
+    { labelKey: "navAbout", page: "about" },
     { label: "The Puzzle Box", page: "pb-home" },
     { label: "Puzzle Play", page: "pp-home" },
-    { label: "Donate", page: "donate" },
+    { labelKey: "navDonate", page: "donate" },
   ],
   // The Puzzle Box and Puzzle Play keep their own navbars. The first link
   // always takes visitors back to The Puzzle Project landing page.
   pb: [
     { label: "The Puzzle Project", page: "home" },
-    { label: "Puzzle Box Home", page: "pb-home" },
-    { label: "How it works", page: "pb-how" },
-    { label: "Training", page: "pb-training" },
-    { label: "Purchase", page: "pb-purchase" },
+    { labelKey: "navPbHome", page: "pb-home" },
+    { labelKey: "navHow", page: "pb-how" },
+    { labelKey: "navTraining", page: "pb-training" },
+    { labelKey: "navPurchase", page: "pb-purchase" },
   ],
   pp: [
     { label: "The Puzzle Project", page: "home" },
-    { label: "Puzzle Play Home", page: "pp-home" },
-    { label: "How it works", page: "pp-how" },
-    { label: "Purchase", page: "pp-purchase" },
+    { labelKey: "navPpHome", page: "pp-home" },
+    { labelKey: "navHow", page: "pp-how" },
+    { labelKey: "navPurchase", page: "pp-purchase" },
   ],
 };
 
@@ -442,10 +515,14 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   // Nav needs more breathing room than the general content breakpoint since
-  // it's packing a logo, links and buttons into one row.
-  const isMobile = useIsMobile(880);
+  // it's packing a logo, links, the EN/AF/XH buttons and Login into one row
+  // (longer Afrikaans / isiXhosa link labels too). Below this width the
+  // compact menu is used, which has the language buttons inside it.
+  const isMobile = useIsMobile(1180);
+  const t = useT();
   const brand = BRANDS[site] || BRANDS.tpp;
-  const links = NAV_BY_SITE[site] || NAV_BY_SITE.tpp;
+  const links = (NAV_BY_SITE[site] || NAV_BY_SITE.tpp)
+    .map(link => ({ ...link, label: link.label || t[link.labelKey] }));
   const activePage = current;
 
   useEffect(() => {
@@ -510,7 +587,7 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
         {/* Logo always returns to this site's home page. While the nav is
             transparent over the video it switches to the light logo. */}
         <button type="button" onClick={() => handleClick(brand.home)}
-          aria-label={`${brand.name} home`}
+          aria-label={t.homeAria(brand.name)}
           style={{ cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0, background: "none", border: "none", padding: 0 }}>
           <BrandLogo site={site} height={isMobile ? 125 : 115} width={125} onDark={!solid} />
         </button>
@@ -521,7 +598,7 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
               {links.map(link => {
                 const isActive = activePage === link.page;
                 return (
-                  <button key={link.label}
+                  <button key={link.page}
                     onClick={() => handleClick(link.page)}
                     className={isActive ? "nav-link is-active" : "nav-link"}
                     aria-current={isActive ? "page" : undefined}
@@ -537,6 +614,8 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
             </div>
 
             <div style={{ display: "flex", gap: 14, alignItems: "center", flexShrink: 0 }}>
+              {/* Over the dark home video the buttons sit on a soft dark pill so they stay legible */}
+              <LanguageSwitcher style={solid ? undefined : { background: "rgba(0,0,0,0.28)", padding: 3, borderRadius: 10 }} />
               <ThemeToggle variant={solid ? "light" : "dark"} />
               <button onClick={() => onLoginClick()} style={{
                 background: "transparent", color: solid ? COLORS.teal : ON_DARK,
@@ -547,7 +626,7 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
                 onMouseEnter={e => { e.currentTarget.style.background = solid ? COLORS.teal : ON_DARK; e.currentTarget.style.color = solid ? COLORS.white : "#1a1a2e"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = solid ? COLORS.teal : ON_DARK; }}
               >
-                Login
+                {t.login}
               </button>
             </div>
           </>
@@ -558,7 +637,7 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
             <ThemeToggle variant={solid ? "light" : "dark"} style={{ padding: "8px 10px" }} />
             <button
               onClick={() => setMenuOpen(o => !o)}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? t.closeMenu : t.openMenu}
               aria-expanded={menuOpen}
               style={{
                 display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
@@ -602,7 +681,7 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
             {links.map(link => {
               const isActive = activePage === link.page;
               return (
-                <button key={link.label}
+                <button key={link.page}
                   onClick={() => handleClick(link.page)}
                   style={{
                     background: isActive ? COLORS.tealLight : "none",
@@ -618,12 +697,13 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
               );
             })}
             <div style={{ height: 1, background: COLORS.border, margin: "10px 0" }} />
+            <LanguageSwitcher style={{ padding: "4px 14px 12px" }} />
             <button onClick={handleLoginClick} style={{
               background: COLORS.teal, color: ON_DARK, border: "none",
               padding: "14px", borderRadius: 10, width: "100%",
               cursor: "pointer", fontWeight: 700, fontSize: 15, fontFamily: "inherit",
             }}>
-              Login
+              {t.login}
             </button>
           </div>
         </div>
@@ -635,44 +715,45 @@ export function Navbar({ site = "tpp", current, onNavigate, onLoginClick, overla
 // Full site footer — identical on every page of a site, with working navigation links
 export function Footer({ site = "tpp", onNavigate, onLoginClick }) {
   const isMobile = useIsMobile(700);
+  const t = useT();
 
   const organisation = {
-    heading: "Organisation",
+    heading: t.footOrg,
     links: [
       ...(site !== "tpp" ? [{ label: "The Puzzle Project", action: () => onNavigate("home") }] : []),
-      { label: "About Us", action: () => onNavigate("about") },
-      { label: "Support Our Work", action: () => onNavigate("donate") },
-      { label: "Contact", href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Enquiry — The Puzzle Project")}` },
+      { label: t.aboutUs, action: () => onNavigate("about") },
+      { label: t.supportWork, action: () => onNavigate("donate") },
+      { label: t.contact, href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Enquiry — The Puzzle Project")}` },
     ],
   };
 
   const platform = {
     tpp: {
-      heading: "Our products",
+      heading: t.footProducts,
       links: [
         { label: "The Puzzle Box", action: () => onNavigate("pb-home") },
         { label: "Puzzle Play", action: () => onNavigate("pp-home") },
-        { label: "Login", action: onLoginClick },
+        { label: t.login, action: onLoginClick },
       ],
     },
     pb: {
-      heading: "Platform",
+      heading: t.footPlatform,
       links: [
-        { label: "Puzzle Box Home", action: () => onNavigate("pb-home") },
-        { label: "How it works", action: () => onNavigate("pb-how") },
-        { label: "Training Modules", action: () => onNavigate("pb-training") },
-        { label: "Purchase", action: () => onNavigate("pb-purchase") },
-        { label: "Login", action: onLoginClick },
+        { label: t.navPbHome, action: () => onNavigate("pb-home") },
+        { label: t.navHow, action: () => onNavigate("pb-how") },
+        { label: t.trainingModules, action: () => onNavigate("pb-training") },
+        { label: t.navPurchase, action: () => onNavigate("pb-purchase") },
+        { label: t.login, action: onLoginClick },
       ],
     },
     pp: {
-      heading: "Platform",
+      heading: t.footPlatform,
       links: [
-        { label: "Puzzle Play Home", action: () => onNavigate("pp-home") },
+        { label: t.navPpHome, action: () => onNavigate("pp-home") },
         { label: "The Puzzle Project", action: () => onNavigate("home") },
-        { label: "How it works", action: () => onNavigate("pp-how") },
-        { label: "Purchase", action: () => onNavigate("pp-purchase") },
-        { label: "Login", action: onLoginClick },
+        { label: t.navHow, action: () => onNavigate("pp-how") },
+        { label: t.navPurchase, action: () => onNavigate("pp-purchase") },
+        { label: t.login, action: onLoginClick },
       ],
     },
   }[site] || null;
@@ -696,10 +777,10 @@ export function Footer({ site = "tpp", onNavigate, onLoginClick }) {
                 style={{ height: 150, width: "auto", display: "block", marginLeft: -12 }} />
             </div>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.75, maxWidth: 320 }}>
-              Supporting early childhood development across South Africa through accessible, culturally relevant, play-based screening tools.
+              {t.footBlurb}
             </p>
             <div style={{ marginTop: 20, padding: "10px 14px", background: "rgba(255,255,255,0.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", display: "inline-block" }}>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>Contact Gary King</p>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{t.contactPerson}</p>
               <p style={{ fontSize: 12, fontWeight: 600 }}>
                 <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: COLORS.teal, textDecoration: "none" }}>{CONTACT_EMAIL}</a>
               </p>
@@ -730,8 +811,8 @@ export function Footer({ site = "tpp", onNavigate, onLoginClick }) {
           ))}
         </div>
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.22)" }}>©️ 2026 {brand.key === "tpp" ? "The Puzzle Project" : `${brand.name} · The Puzzle Project`}. All rights reserved.</p>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.22)" }}>Intellectual property of Dr R. Marais &amp; Dr J. Jansen (2025)</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.22)" }}>©️ 2026 {brand.key === "tpp" ? "The Puzzle Project" : `${brand.name} · The Puzzle Project`}. {t.rights}</p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.22)" }}>{t.ip}</p>
         </div>
       </div>
     </footer>
@@ -747,16 +828,17 @@ export const CONTACT_EMAIL = "gary@picturetree.co.za";
 
 export function CallToAction() {
   const isMobile = useIsMobile(640);
+  const t = useT();
   return (
     <section style={{ padding: isMobile ? "56px 22px" : "90px 40px", background: `linear-gradient(135deg, ${COLORS.dark} 0%, #2A1040 100%)`, position: "relative", overflow: "hidden" }}>
       <PuzzlePiece size={90} color={COLORS.teal} rotate={15} fillOpacity={0.25} style={{ position: "absolute", top: -30, left: -20 }} />
       <PuzzlePiece size={70} color={COLORS.pink} rotate={-20} fillOpacity={0.25} style={{ position: "absolute", bottom: -20, right: -10 }} />
       <div style={{ maxWidth: 760, margin: "auto", textAlign: "center", position: "relative", zIndex: 1 }}>
         <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(26px, 3.2vw, 42px)", color: ON_DARK, marginBottom: 20, fontWeight: 900, lineHeight: 1.15, letterSpacing: "-0.02em" }}>
-          Together we can give every child the opportunity to thrive.
+          {t.ctaTitle}
         </h2>
         <p style={{ fontSize: 16, lineHeight: 1.8, color: "rgba(255,255,255,0.62)", maxWidth: 620, margin: "0 auto 36px" }}>
-          Whether you are an educator, therapist, school, researcher or partner organisation, your involvement helps us create brighter futures for children across South Africa.
+          {t.ctaBody}
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
           <button onClick={() => { window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Enquiry — The Puzzle Project")}`; }} style={{
@@ -767,7 +849,7 @@ export function CallToAction() {
             onMouseEnter={e => { e.currentTarget.style.background = COLORS.tealDark; e.currentTarget.style.transform = "translateY(-2px)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = COLORS.teal; e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            Contact Us
+            {t.contactUs}
           </button>
         </div>
       </div>
@@ -861,10 +943,11 @@ export const WARM_PAGE_CSS = `
 // video itself, so no ref is needed.
 export function VideoPauseButton({ style = {} }) {
   const [paused, setPaused] = useState(false);
+  const t = useT();
   return (
     <button
       type="button"
-      aria-label={paused ? "Play background video" : "Pause background video"}
+      aria-label={paused ? t.playVideo : t.pauseVideo}
       onClick={(e) => {
         const v = e.currentTarget.parentElement?.querySelector("video");
         if (!v) return;

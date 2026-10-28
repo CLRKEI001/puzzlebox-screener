@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   COLORS, ON_DARK, FONTS, PUBLIC_FONT_IMPORT, CREAM, Reveal, PuzzlePiece, SectionHeading, Navbar, Footer, CallToAction, piecePath, gridEdges, useInView, useIsMobile, PIECE_BODY, PIECE_PAD, PIECE_VIEWBOX, VideoPauseButton,
 } from "../shared/SiteChrome";
+import { useLanguage } from "../../theme/LanguageContext";
 // Hero footage sits directly in src/ so webpack bundles it.
 // hero-puzzle.mp4 = desktop (1280x960), hero-puzzle-mobile.mp4 = phones (720x540, ~3 MB)
 import Doodle from "../shared/Doodle";
@@ -23,6 +24,205 @@ import puzzleBoxSession from "../../assets/puzzlepicture_angled.png";
 // assemble/float animation CSS are exported so The Puzzle Box home page can
 // reuse them with its own copy.
 
+// ---- UI text in English, Afrikaans and isiXhosa ---------------------------
+// The data arrays below (DOMAINS, PILLARS, WHAT_WE_DO, VISION_ITEMS) keep
+// their colours, ids and targets; their words live here, keyed by id, so
+// they follow the language picked in the navbar. Brand / product names stay
+// the same in every language.
+const T = {
+  en: {
+    domains: {
+      cognitive: { label: "Cognitive", title: "Cognitive development", desc: "Thinking, attention, planning, memory and early number concepts." },
+      language: { label: "Language", title: "Language development", desc: "Understanding spoken instructions and using language accurately." },
+      finemotor: { label: "Fine Motor", title: "Fine Motor development", desc: "Hand-eye coordination, pencil control and motor planning." },
+      social: { label: "Social & Emotional", title: "Social & Emotional development", desc: "Understanding feelings, getting along with peers, making fair choices." },
+    },
+    puzzleIntro: "One screener. Six developmental domains, grouped into four pieces.",
+    puzzleTap: "Tap a piece to explore.",
+    puzzleHover: "Hover over a piece to explore.",
+    tppBadge: "South African NGO initiative",
+    tppLead: "The Puzzle Project is a South African non-profit bringing structured early childhood developmental screening to every school — regardless of location or connectivity.",
+    heroH1a: "No child left behind —", heroH1b: "early screening,", heroH1c: " every school.",
+    videoEyebrow: "One piece at a time",
+    videoH1a: "Every child deserves", videoH1b: "to be", videoH1c: "seen.", videoH1d: "",
+    videoLead: "We're a South African non-profit using puzzles to spot developmental needs early, in every school, in every language, whether or not there's signal.",
+    explorePb: "Explore The Puzzle Box", explorePp: "Explore Puzzle Play",
+    whyEyebrow: "Why we exist",
+    whyText: "Too often, a child's developmental needs are only noticed once they're already struggling at school. We want to catch them early, with something",
+    whyHighlight: "every child already loves.",
+    pillarsEyebrow: "What guides us",
+    pillarsTitle: "Three things we won't compromise on",
+    pillars: {
+      "01": { title: "Identify early", tags: ["Evidence-based", "Structured"], desc: "Catch developmental concerns before they become barriers to learning, using structured evidence-based screening tools." },
+      "02": { title: "Reach every child", tags: ["Multilingual", "Low-connectivity", "Eastern Cape"], desc: "Multilingual and designed to work in low-connectivity environments, starting in the Eastern Cape." },
+      "03": { title: "Protect with ethics", tags: ["POPIA", "HPCSA"], desc: "All child data is anonymised, POPIA-compliant and governed by strict ethical standards aligned with HPCSA guidelines." },
+    },
+    storyScrollHint: "Keep scrolling to put the picture together",
+    storyAlt: "Children planting and watering a vegetable garden, cut into puzzle pieces that fit together",
+    storyEyebrow: "How it started",
+    storyTitle: "\"What if puzzles could make a difference?\"",
+    storyP1: "For Gary King, the question arrived while producing a film in the rural Eastern Cape, where he saw the challenges facing young children growing up with limited access to educational and developmental resources.",
+    storyP2: "That question became The Puzzle Project. Gary brought together psychologists, educators, researchers and community partners to build a scientifically rigorous, culturally responsive screening tool made for South African children.",
+    storyButton: "Read our story",
+    whatEyebrow: "What we do",
+    whatTitle: "Play, screening and research, all connected",
+    whatWeDo: {
+      pp: { title: "Puzzle Play", desc: "Lesson plans, multilingual videos and training quizzes so educators can run puzzle-based activities in class.", cta: "Explore Puzzle Play" },
+      pb: { title: "The Puzzle Box", desc: "Our screener: structured assessments with timers, observation notes and results across six developmental domains.", cta: "Explore The Puzzle Box",
+        imgAlt: "A child fitting pieces into The Puzzle Box frame while a timer runs on a phone beside it" },
+      research: { title: "Research and insight", desc: "Anonymised dashboards and exports for researchers, policy makers and project sponsors.", note: "Coming soon" },
+    },
+    visionEyebrow: "The bigger picture",
+    visionTitle: "The Puzzle Project Vision",
+    visionLead: "The Puzzle Box is one piece of a larger plan to bring puzzles into classrooms, homes and communities across South Africa.",
+    vision: {
+      pb: "ECD developmental screening\nfor 5 to 6 year olds.",
+      pp: "Nationwide puzzle development\nfor Grades 0 to 7.",
+      tv: "An educational TV show\ntaking development into\nhomes.",
+      app: "Puzzles for all — a digital\nplatform, everywhere.",
+      production: "Design, production and\ndistribution, creating jobs\nthrough printing and recycling.",
+      data: "Recording the shifts that\npuzzles make.",
+    },
+    learnMore: "Learn more →",
+    inDevelopment: "In development",
+    goTo: (title) => `Go to ${title}`,
+    inDevelopmentAria: (title) => `${title}, in development`,
+    supportEyebrow: "Make a difference",
+    supportTitle: "Help a child get seen sooner",
+    supportText: "Your donation goes towards The Puzzle Box Screener and Puzzle Play, reaching more children and training more educators.",
+    donate: "Donate",
+  },
+  af: {
+    domains: {
+      cognitive: { label: "Kognitief", title: "Kognitiewe ontwikkeling", desc: "Dink, aandag, beplanning, geheue en vroeë getalbegrip." },
+      language: { label: "Taal", title: "Taalontwikkeling", desc: "Om gesproke instruksies te verstaan en taal akkuraat te gebruik." },
+      finemotor: { label: "Fyn Motories", title: "Fynmotoriese ontwikkeling", desc: "Hand-oog-koördinasie, potloodbeheer en motoriese beplanning." },
+      social: { label: "Sosiaal & Emosioneel", title: "Sosiale en emosionele ontwikkeling", desc: "Om gevoelens te verstaan, met maats oor die weg te kom en regverdige keuses te maak." },
+    },
+    puzzleIntro: "Een sifter. Ses ontwikkelingsdomeine, gegroepeer in vier stukke.",
+    puzzleTap: "Tik op 'n stuk om te verken.",
+    puzzleHover: "Beweeg oor 'n stuk om te verken.",
+    tppBadge: "Suid-Afrikaanse NRO-inisiatief",
+    tppLead: "The Puzzle Project is 'n Suid-Afrikaanse nie-winsgewende organisasie wat gestruktureerde ontwikkelingsifting in die vroeë kinderjare na elke skool bring — ongeag ligging of konnektiwiteit.",
+    heroH1a: "Geen kind word agtergelaat nie —", heroH1b: "vroeë sifting", heroH1c: " in elke skool.",
+    videoEyebrow: "Een stukkie op 'n slag",
+    videoH1a: "Elke kind verdien", videoH1b: "om", videoH1c: "raakgesien", videoH1d: " te word.",
+    videoLead: "Ons is 'n Suid-Afrikaanse nie-winsgewende organisasie wat legkaarte gebruik om ontwikkelingsbehoeftes vroeg raak te sien — in elke skool, in elke taal, of daar nou sein is of nie.",
+    explorePb: "Verken The Puzzle Box", explorePp: "Verken Puzzle Play",
+    whyEyebrow: "Hoekom ons bestaan",
+    whyText: "Te dikwels word 'n kind se ontwikkelingsbehoeftes eers raakgesien wanneer hy of sy reeds op skool sukkel. Ons wil dit vroeg raaksien, met iets wat",
+    whyHighlight: "elke kind reeds liefhet.",
+    pillarsEyebrow: "Wat ons lei",
+    pillarsTitle: "Drie dinge waaraan ons nie toegewings maak nie",
+    pillars: {
+      "01": { title: "Identifiseer vroeg", tags: ["Bewysgebaseer", "Gestruktureerd"], desc: "Identifiseer ontwikkelingskwessies voordat dit hindernisse vir leer word, met gestruktureerde, bewysgebaseerde sifting-instrumente." },
+      "02": { title: "Bereik elke kind", tags: ["Veeltalig", "Lae konnektiwiteit", "Oos-Kaap"], desc: "Veeltalig en ontwerp om in omgewings met swak konnektiwiteit te werk, met die Oos-Kaap as beginpunt." },
+      "03": { title: "Beskerm met etiek", tags: ["POPIA", "HPCSA"], desc: "Alle kinderdata word geanonimiseer, voldoen aan POPIA en word gerig deur streng etiese standaarde wat met die HPCSA-riglyne strook." },
+    },
+    storyScrollHint: "Hou aan rol om die prentjie bymekaar te sit",
+    storyAlt: "Kinders wat 'n groentetuin plant en natgooi, in legkaartstukke gesny wat inmekaar pas",
+    storyEyebrow: "Hoe dit begin het",
+    storyTitle: "\"Wat as legkaarte 'n verskil kan maak?\"",
+    storyP1: "Vir Gary King het die vraag opgekom terwyl hy 'n film in die landelike Oos-Kaap vervaardig het, waar hy die uitdagings gesien het van jong kinders wat grootword met beperkte toegang tot opvoedkundige en ontwikkelingshulpbronne.",
+    storyP2: "Daardie vraag het The Puzzle Project geword. Gary het sielkundiges, onderwysers, navorsers en gemeenskapsvennote saamgebring om 'n wetenskaplik streng, kultureel sensitiewe sifting-instrument vir Suid-Afrikaanse kinders te bou.",
+    storyButton: "Lees ons storie",
+    whatEyebrow: "Wat ons doen",
+    whatTitle: "Spel, sifting en navorsing, alles verbind",
+    whatWeDo: {
+      pp: { title: "Puzzle Play", desc: "Lesplanne, veeltalige video's en opleidingsvasvrae sodat onderwysers legkaartaktiwiteite in die klas kan aanbied.", cta: "Verken Puzzle Play" },
+      pb: { title: "The Puzzle Box", desc: "Ons sifter: gestruktureerde assesserings met tydhouers, waarnemingsnotas en resultate oor ses ontwikkelingsdomeine.", cta: "Verken The Puzzle Box",
+        imgAlt: "'n Kind wat stukke in die The Puzzle Box-raam pas terwyl 'n tydhouer op 'n foon langsaan loop" },
+      research: { title: "Navorsing en insig", desc: "Geanonimiseerde paneelborde en uitvoere vir navorsers, beleidmakers en projekborge.", note: "Binnekort" },
+    },
+    visionEyebrow: "Die groter prentjie",
+    visionTitle: "Die Visie van The Puzzle Project",
+    visionLead: "The Puzzle Box is een stuk van 'n groter plan om legkaarte na klaskamers, huise en gemeenskappe regoor Suid-Afrika te bring.",
+    vision: {
+      pb: "ECD-ontwikkelingsifting\nvir 5- tot 6-jariges.",
+      pp: "Landwye legkaartontwikkeling\nvir Graad 0 tot 7.",
+      tv: "'n Opvoedkundige TV-program\nwat ontwikkeling na\nhuise bring.",
+      app: "Legkaarte vir almal — 'n digitale\nplatform, oral.",
+      production: "Ontwerp, produksie en\nverspreiding, wat werk skep\ndeur drukwerk en herwinning.",
+      data: "Teken die verskuiwings aan wat\nlegkaarte teweegbring.",
+    },
+    learnMore: "Lees meer →",
+    inDevelopment: "In ontwikkeling",
+    goTo: (title) => `Gaan na ${title}`,
+    inDevelopmentAria: (title) => `${title}, in ontwikkeling`,
+    supportEyebrow: "Maak 'n verskil",
+    supportTitle: "Help 'n kind om gouer raakgesien te word",
+    supportText: "Jou skenking gaan na die The Puzzle Box-sifter en Puzzle Play, sodat ons meer kinders kan bereik en meer onderwysers kan oplei.",
+    donate: "Skenk",
+  },
+  xh: {
+    domains: {
+      cognitive: { label: "Ukucinga", title: "Uphuhliso lokucinga", desc: "Ukucinga, ukunika ingqalelo, ukucwangcisa, inkumbulo neengqiqo zokuqala zamanani." },
+      language: { label: "Ulwimi", title: "Uphuhliso lolwimi", desc: "Ukuqonda imiyalelo ethethwayo nokusebenzisa ulwimi ngokuchanekileyo." },
+      finemotor: { label: "Izakhono Zezandla", title: "Uphuhliso lwezakhono zezandla", desc: "Ukusebenzisana kwesandla neliso, ukulawula ipensile nokucwangcisa iintshukumo." },
+      social: { label: "Ezentlalo & Iimvakalelo", title: "Uphuhliso lwentlalo neemvakalelo", desc: "Ukuqonda iimvakalelo, ukuvana noontanga nokwenza izigqibo ezinobulungisa." },
+    },
+    puzzleIntro: "Isixhobo sohlolo esinye. Imihlaba emithandathu yophuhliso, ehlelwe yaba ngamaqhekeza amane.",
+    puzzleTap: "Cofa iqhekeza ukuze uphonononge.",
+    puzzleHover: "Beka ikhesa phezu kweqhekeza ukuze uphonononge.",
+    tppBadge: "Iphulo le-NGO yaseMzantsi Afrika",
+    tppLead: "The Puzzle Project ngumbutho ongenzi nzuzo waseMzantsi Afrika ozisa uhlolo lophuhliso lwabantwana abasakhulayo olucwangcisiweyo kwisikolo ngasinye — kungakhathaliseki indawo okanye ukufikelela kwi-intanethi.",
+    heroH1a: "Akukho mntwana ushiywa ngasemva —", heroH1b: "uhlolo lwangethuba", heroH1c: " kwisikolo ngasinye.",
+    videoEyebrow: "Iqhekeza ngeqhekeza",
+    videoH1a: "Wonke umntwana", videoH1b: "ufanelwe", videoH1c: "kukubonwa.", videoH1d: "",
+    videoLead: "Singumbutho ongenzi nzuzo waseMzantsi Afrika osebenzisa iiphazili ukubona kwangethuba iimfuno zophuhliso — kwisikolo ngasinye, ngalo lonke ulwimi, nokuba inethiwekhi ikhona okanye ayikho.",
+    explorePb: "Phonononga The Puzzle Box", explorePp: "Phonononga Puzzle Play",
+    whyEyebrow: "Kutheni sikhona",
+    whyText: "Kaninzi, iimfuno zophuhliso zomntwana ziqatshelwa kuphela xa sele esokola esikolweni. Sifuna ukuzibona kwangethuba, ngento",
+    whyHighlight: "ethandwa ngumntwana wonke.",
+    pillarsEyebrow: "Into esikhokelayo",
+    pillarsTitle: "Izinto ezintathu esingayi kuzincama",
+    pillars: {
+      "01": { title: "Fumanisa kwangethuba", tags: ["Esekelwe kubungqina", "Ecwangcisiweyo"], desc: "Bona iinkxalabo zophuhliso ngaphambi kokuba zibe yimiqobo ekufundeni, usebenzisa izixhobo zohlolo ezicwangcisiweyo nezisekelwe kubungqina." },
+      "02": { title: "Fikelela kuwo wonke umntwana", tags: ["Iilwimi ezininzi", "Inethiwekhi ebuthathaka", "Mpuma Koloni"], desc: "Ngeelwimi ezininzi kwaye yenzelwe ukusebenza kwiindawo ezinenethiwekhi ebuthathaka, siqala eMpuma Koloni." },
+      "03": { title: "Khusela ngokuziphatha okufanelekileyo", tags: ["POPIA", "HPCSA"], desc: "Yonke idatha yabantwana ayichazi magama, ithobela i-POPIA kwaye ilawulwa yimigangatho engqongqo yokuziphatha ehambelana nemigaqo ye-HPCSA." },
+    },
+    storyScrollHint: "Qhubeka usihla ukuze umfanekiso uhlangane",
+    storyAlt: "Abantwana betyala besinkcenkceshela igadi yemifuno, isikwe yaba ngamaqhekeza ephazili adibanayo",
+    storyEyebrow: "Kwaqala njani",
+    storyTitle: "\"Kuthekani ukuba iiphazili zingenza umahluko?\"",
+    storyP1: "KuGary King, lo mbuzo wavela xa wayevelisa ifilimu kwiindawo zasemaphandleni eMpuma Koloni, apho wabona khona imingeni ejongene nabantwana abancinci abakhula befikelela kancinci kwizixhobo zemfundo nezophuhliso.",
+    storyP2: "Lo mbuzo waba yiThe Puzzle Project. UGary wahlanganisa izazi zengqondo, ootitshala, abaphandi namaqabane asekuhlaleni ukuze bakhe isixhobo sohlolo esiqinileyo ngokwenzululwazi nesihambelana neenkcubeko, esenzelwe abantwana baseMzantsi Afrika.",
+    storyButton: "Funda ibali lethu",
+    whatEyebrow: "Esikwenzayo",
+    whatTitle: "Umdlalo, uhlolo nophando, konke kunxulumene",
+    whatWeDo: {
+      pp: { title: "Puzzle Play", desc: "Izicwangciso zezifundo, iividiyo ngeelwimi ezininzi nemibuzo yoqeqesho ukuze ootitshala baqhube imisebenzi esekelwe kwiiphazili eklasini.", cta: "Phonononga Puzzle Play" },
+      pb: { title: "The Puzzle Box", desc: "Isixhobo sethu sohlolo: uvavanyo olucwangcisiweyo olunezibali-xesha, amanqaku okuqwalasela neziphumo kwimihlaba emithandathu yophuhliso.", cta: "Phonononga The Puzzle Box",
+        imgAlt: "Umntwana efaka amaqhekeza kwisakhelo seThe Puzzle Box ngelixa isibali-xesha sisebenza efowunini ecaleni kwakhe" },
+      research: { title: "Uphando nolwazi", desc: "Iideshibhodi neefayile ezikhutshelwayo ezingachazi magama, zabaphandi, abenzi bemigaqo-nkqubo nabaxhasi beprojekthi.", note: "Kuyeza kungekudala" },
+    },
+    visionEyebrow: "Umfanekiso omkhulu",
+    visionTitle: "Umbono weThe Puzzle Project",
+    visionLead: "The Puzzle Box liqhekeza elinye lesicwangciso esikhulu sokuzisa iiphazili emagumbini okufundela, emakhaya nasekuhlaleni kuwo wonke uMzantsi Afrika.",
+    vision: {
+      pb: "Uhlolo lophuhliso lwe-ECD\nlwabantwana abaneminyaka emi-5 ukuya kwemi-6.",
+      pp: "Uphuhliso ngeephazili kwilizwe lonke\nkumaBanga 0 ukuya kwele-7.",
+      tv: "Inkqubo kamabonakude yemfundo\nezisa uphuhliso\nemakhaya.",
+      app: "Iiphazili zabo bonke — iqonga\nledijithali, kuyo yonke indawo.",
+      production: "Uyilo, imveliso\nnokusasaza, kudalwa imisebenzi\nngokushicilela nokurisayikilisha.",
+      data: "Ukurekhoda utshintsho\nolwenziwa ziiphazili.",
+    },
+    learnMore: "Funda ngakumbi →",
+    inDevelopment: "Kusaphuhliswa",
+    goTo: (title) => `Yiya ku-${title}`,
+    inDevelopmentAria: (title) => `${title}, kusaphuhliswa`,
+    supportEyebrow: "Yenza umahluko",
+    supportTitle: "Nceda umntwana abonwe kwangethuba",
+    supportText: "Umnikelo wakho uya kwisixhobo sohlolo iThe Puzzle Box nakwiPuzzle Play, ukuze sifikelele kubantwana abaninzi kwaye siqeqeshe ootitshala abaninzi.",
+    donate: "Nikela",
+  },
+};
+
+function useT() {
+  const { lang } = useLanguage();
+  return T[lang] || T.en;
+}
+
 // The four developmental domains the screener measures, rendered as a real
 // 2x2 jigsaw: each piece's tabs slot into the neighbouring piece's sockets.
 // Pieces slide in from four directions on load, then float gently.
@@ -34,32 +234,28 @@ import puzzleBoxSession from "../../assets/puzzlepicture_angled.png";
 // are mirrored between neighbours so the pieces genuinely fit together.
 const DOMAINS = [
   {
-    key: "cognitive", label: "Cognitive", color: COLORS.teal,
+    key: "cognitive", color: COLORS.teal,
     row: 0, col: 0, edges: { top: -1, right: 1, bottom: -1, left: 1 },
     from: "translate(-70px, -70px)",
     icon: "bulb",
-    desc: "Thinking, attention, planning, memory and early number concepts.",
   },
   {
-    key: "language", label: "Language", color: COLORS.pink, labelDy: -0.22,
+    key: "language", color: COLORS.pink, labelDy: -0.22,
     row: 0, col: 1, edges: { top: 1, right: -1, bottom: 1, left: -1 },
     from: "translate(70px, -70px)",
     icon: "books",
-    desc: "Understanding spoken instructions and using language accurately.",
   },
   {
-    key: "finemotor", label: "Fine Motor", color: COLORS.orange,
+    key: "finemotor", color: COLORS.orange,
     row: 1, col: 0, edges: { top: 1, right: 1, bottom: 1, left: -1 },
     from: "translate(-70px, 70px)",
     icon: "pencil",
-    desc: "Hand-eye coordination, pencil control and motor planning.",
   },
   {
-    key: "social", label: "Social & Emotional", color: COLORS.purple,
+    key: "social", color: COLORS.purple,
     row: 1, col: 1, edges: { top: -1, right: 1, bottom: -1, left: -1 },
     from: "translate(70px, 70px)",
     icon: "users",
-    desc: "Understanding feelings, getting along with peers, making fair choices.",
   },
 ];
 
@@ -69,7 +265,10 @@ const noHover = () =>
 
 function DomainPuzzle() {
   const [hovered, setHovered] = useState(null);
-  const active = DOMAINS.find(d => d.key === hovered);
+  const t = useT();
+  // Shared shape/colour data plus the words for the current language
+  const domains = DOMAINS.map(d => ({ ...d, ...t.domains[d.key] }));
+  const active = domains.find(d => d.key === hovered);
   const isMobile = useIsMobile(480);
   const touch = noHover();
 
@@ -97,7 +296,7 @@ function DomainPuzzle() {
         position: "relative", width: BODY_PX * 2, height: BODY_PX * 2,
         margin: `${PAD_PX * 0.8}px auto`, overflow: "visible",
       }}>
-        {DOMAINS.map((d, i) => {
+        {domains.map((d, i) => {
           const isHovered = hovered === d.key;
           return (
             <div key={d.key}
@@ -177,13 +376,13 @@ function DomainPuzzle() {
           {active ? (
             <>
               <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: active.color, marginBottom: 5 }}>
-                {active.label} development
+                {active.title}
               </p>
               <p style={{ fontSize: 13.5, color: COLORS.inkMid, lineHeight: 1.6 }}>{active.desc}</p>
             </>
           ) : (
             <p style={{ fontSize: 13, color: COLORS.inkFaint, lineHeight: 1.6 }}>
-              One screener. Six developmental domains, grouped into four pieces.<br />{touch ? "Tap" : "Hover over"} a piece to explore.
+              {t.puzzleIntro}<br />{touch ? t.puzzleTap : t.puzzleHover}
             </p>
           )}
         </div>
@@ -212,16 +411,15 @@ export const HOME_ANIMATION_CSS = `
   }
 `;
 
-const TPP_HERO = {
-  badge: "South African NGO initiative",
-  lead: "The Puzzle Project is a South African non-profit bringing structured early childhood developmental screening to every school — regardless of location or connectivity.",
-};
-
 // Light hero — soft background, brand colours, split layout.
 // `badge` / `lead` / `actions` / `stats` let The Puzzle Box home page reuse it with its own copy.
+// Leave `badge` / `lead` out to get The Puzzle Project's own copy in the current language.
 // actions: [{ label, onClick, primary? }]
 // stats:   [{ value, label }] — the strip below the hero only renders when this has items
-export function Hero({ badge = TPP_HERO.badge, lead = TPP_HERO.lead, actions = [], stats = [] }) {
+export function Hero({ badge: badgeProp, lead: leadProp, actions = [], stats = [] }) {
+  const t = useT();
+  const badge = badgeProp === undefined ? t.tppBadge : badgeProp;
+  const lead = leadProp === undefined ? t.tppLead : leadProp;
   const [visible, setVisible] = useState(false);
   const isMobile = useIsMobile(860);
   useEffect(() => { const t = setTimeout(() => setVisible(true), 120); return () => clearTimeout(t); }, []);
@@ -275,8 +473,8 @@ export function Hero({ badge = TPP_HERO.badge, lead = TPP_HERO.lead, actions = [
             lineHeight: 1.08, letterSpacing: "-0.03em",
             marginBottom: 22, ...fadeUp(0.15),
           }}>
-            No child left behind —<br />
-            <span style={{ color: COLORS.teal }}>early screening,</span> every school.
+            {t.heroH1a}<br />
+            <span style={{ color: COLORS.teal }}>{t.heroH1b}</span>{t.heroH1c}
           </h1>
 
           <p style={{
@@ -390,6 +588,7 @@ export function VideoHero({ actions = [] }) {
   const [visible, setVisible] = useState(false);
   const [playVideo] = useState(shouldPlayHeroVideo);
   const isMobile = useIsMobile(860);
+  const t = useT();
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 150);
@@ -439,7 +638,7 @@ export function VideoHero({ actions = [] }) {
           letterSpacing: "0.12em", textTransform: "uppercase",
           color: COLORS.pinkLight, marginBottom: 16, ...rise(0.1),
         }}>
-          One piece at a time
+          {t.videoEyebrow}
         </p>
 
         <h1 style={{
@@ -448,23 +647,22 @@ export function VideoHero({ actions = [] }) {
           letterSpacing: "-0.03em", marginBottom: 22,
           textShadow: "0 2px 24px rgba(0,0,0,0.35)", ...rise(0.2),
         }}>
-          Every child deserves<br />to be{" "}
+          {t.videoH1a}<br />{t.videoH1b && <>{t.videoH1b}{" "}</>}
           <span style={{ position: "relative", whiteSpace: "nowrap" }}>
-            seen.
+            {t.videoH1c}
             <svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"
               style={{ position: "absolute", left: 0, bottom: "-0.12em", width: "100%", height: "0.3em", overflow: "visible" }}>
               <path d="M3 13 C 40 4, 90 18, 130 9 S 185 6, 197 11"
                 fill="none" stroke={COLORS.pink} strokeWidth="5" strokeLinecap="round" className="scribble" />
             </svg>
-          </span>
+          </span>{t.videoH1d}
         </h1>
 
         <p style={{
           fontSize: "clamp(15px, 1.6vw, 19px)", lineHeight: 1.7, maxWidth: 580,
           margin: "0 auto 32px", color: "rgba(255,255,255,0.9)", ...rise(0.35),
         }}>
-          We're a South African non-profit using puzzles to spot developmental needs early,
-          in every school, in every language, whether or not there's signal.
+          {t.videoLead}
         </p>
 
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center", ...rise(0.5) }}>
@@ -519,21 +717,21 @@ export const VIDEO_HERO_CSS = `
 
 function WhyWeExist() {
   const isMobile = useIsMobile(760);
+  const t = useT();
   return (
     <section style={{ background: CREAM, padding: isMobile ? "70px 22px" : "110px 40px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
         <Reveal>
           <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: COLORS.teal, marginBottom: 18 }}>
-            Why we exist
+            {t.whyEyebrow}
           </p>
           <h2 style={{
             fontFamily: FONTS.heading, fontWeight: 800, color: COLORS.ink,
             fontSize: "clamp(24px, 3.4vw, 42px)", lineHeight: 1.25, letterSpacing: "-0.02em",
             maxWidth: 860, margin: "0 auto",
           }}>
-            Too often, a child's developmental needs are only noticed once they're already
-            struggling at school. We want to catch them early, with something{" "}
-            <span style={{ color: COLORS.pink }}>every child already loves.</span>
+            {t.whyText}{" "}
+            <span style={{ color: COLORS.pink }}>{t.whyHighlight}</span>
           </h2>
         </Reveal>
 
@@ -544,9 +742,10 @@ function WhyWeExist() {
 
 // ---- 3. What guides us: three pillars, no boxes --------------------------
 const PILLARS = [
-  { n: "01", title: "Identify early", color: COLORS.orange, tags: ["Evidence-based", "Structured"], desc: "Catch developmental concerns before they become barriers to learning, using structured evidence-based screening tools." },
-  { n: "02", title: "Reach every child", color: COLORS.pink, tags: ["Multilingual", "Low-connectivity", "Eastern Cape"], desc: "Multilingual and designed to work in low-connectivity environments, starting in the Eastern Cape." },
-  { n: "03", title: "Protect with ethics", color: COLORS.purple, tags: ["POPIA", "HPCSA"], desc: "All child data is anonymised, POPIA-compliant and governed by strict ethical standards aligned with HPCSA guidelines." },
+  // title / tags / desc for each pillar are in T.pillars, keyed by `n`
+  { n: "01", color: COLORS.orange },
+  { n: "02", color: COLORS.pink },
+  { n: "03", color: COLORS.purple },
 ];
 
 // Deep teal band — the page's main colour break between the cream sections.
@@ -556,6 +755,8 @@ const PILLARS = [
 function Pillars() {
   const isMobile = useIsMobile(760);
   const [hover, setHover] = useState(null);
+  const t = useT();
+  const pillars = PILLARS.map(p => ({ ...p, ...t.pillars[p.n] }));
   return (
     <section style={{
       background: COLORS.tealDark, padding: isMobile ? "68px 22px" : "104px 40px",
@@ -570,18 +771,18 @@ function Pillars() {
       <div style={{ maxWidth: 1120, margin: "0 auto", position: "relative" }}>
         <Reveal style={{ textAlign: "center", marginBottom: isMobile ? 44 : 64 }}>
           <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: COLORS.pinkLight, marginBottom: 14 }}>
-            What guides us
+            {t.pillarsEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(26px, 3.2vw, 40px)", fontWeight: 900, color: ON_DARK, lineHeight: 1.15, letterSpacing: "-0.02em" }}>
-            Three things we won't compromise on
+            {t.pillarsTitle}
           </h2>
         </Reveal>
 
         <div style={{ position: "relative", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 34 : 28 }}>
-          {PILLARS.map((p, i) => {
+          {pillars.map((p, i) => {
             const on = hover === i;
             return (
-              <Reveal key={p.title} delay={i * 0.12} style={{ position: "relative" }}>
+              <Reveal key={p.n} delay={i * 0.12} style={{ position: "relative" }}>
                 <div
                   onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
                   style={{
@@ -649,6 +850,7 @@ function StoryPuzzle({ src, alt }) {
   const wrapRef = useRef(null);
   const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const [progress, setProgress] = useState(reduced ? 1 : 0);
+  const t = useT();
 
   // Scroll-driven: the picture builds itself as the section scrolls into view
   useEffect(() => {
@@ -714,7 +916,7 @@ function StoryPuzzle({ src, alt }) {
       </svg>
       <p style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: "#6b6b7a", fontFamily: FONTS.body,
         opacity: done ? 0 : 0.8, transition: "opacity 0.4s" }}>
-        Keep scrolling to put the picture together
+        {t.storyScrollHint}
       </p>
     </div>
   );
@@ -723,6 +925,7 @@ function StoryPuzzle({ src, alt }) {
 // ---- 4. Our story: told like a story -------------------------------------
 function OurStory({ onNavigate }) {
   const isMobile = useIsMobile(860);
+  const t = useT();
   return (
     <section style={{ background: CREAM, padding: isMobile ? "70px 22px" : "110px 40px", overflow: "hidden" }}>
       <div style={{
@@ -732,26 +935,24 @@ function OurStory({ onNavigate }) {
       }}>
         {/* Picture first on desktop so the story reads beside it */}
         <div style={{ order: isMobile ? 2 : 1 }}>
-          <StoryPuzzle src={momentClassroom} alt="Children planting and watering a vegetable garden, cut into puzzle pieces that fit together" />
+          <StoryPuzzle src={momentClassroom} alt={t.storyAlt} />
         </div>
 
         <Reveal delay={0.1} style={{ order: isMobile ? 1 : 2, textAlign: isMobile ? "center" : "left" }}>
           <p style={{ color: COLORS.teal, textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.12em", marginBottom: 14, fontSize: 12 }}>
-            How it started
+            {t.storyEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(28px, 3.4vw, 44px)", color: COLORS.ink, lineHeight: 1.12, marginBottom: 22, fontWeight: 900, letterSpacing: "-0.02em" }}>
-            "What if puzzles could make a difference?"
+            {t.storyTitle}
           </h2>
           <p style={{ color: COLORS.inkMid, lineHeight: 1.85, marginBottom: 16, fontSize: 16 }}>
-            For Gary King, the question arrived while producing a film in the rural Eastern Cape, where he saw
-            the challenges facing young children growing up with limited access to educational and developmental resources.
+            {t.storyP1}
           </p>
           <p style={{ color: COLORS.inkMid, lineHeight: 1.85, marginBottom: 28, fontSize: 16 }}>
-            That question became The Puzzle Project. Gary brought together psychologists, educators, researchers
-            and community partners to build a scientifically rigorous, culturally responsive screening tool made for South African children.
+            {t.storyP2}
           </p>
           <button onClick={() => onNavigate("about")} className="hero-btn" style={{ background: COLORS.ink, borderColor: COLORS.ink }}>
-            Read our story
+            {t.storyButton}
           </button>
         </Reveal>
       </div>
@@ -770,23 +971,25 @@ function OurStory({ onNavigate }) {
 const cardTint = (color) => `color-mix(in srgb, ${color} 10%, ${COLORS.white})`;
 
 const WHAT_WE_DO = [
-  { title: "Puzzle Play", desc: "Lesson plans, multilingual videos and training quizzes so educators can run puzzle-based activities in class.", color: COLORS.pink, bg: cardTint(COLORS.pink), page: "pp-home", cta: "Explore Puzzle Play" },
-  { title: "The Puzzle Box", desc: "Our screener: structured assessments with timers, observation notes and results across six developmental domains.", color: COLORS.teal, bg: cardTint(COLORS.teal), page: "pb-home", cta: "Explore The Puzzle Box",
-    img: puzzleBoxSession, imgAlt: "A child fitting pieces into The Puzzle Box frame while a timer runs on a phone beside it" },
-  { title: "Research and insight", desc: "Anonymised dashboards and exports for researchers, policy makers and project sponsors.", color: COLORS.purple, bg: cardTint(COLORS.purple), note: "Coming soon" },
+  // title / desc / cta / imgAlt / note for each card are in T.whatWeDo, keyed by `id`
+  { id: "pp", color: COLORS.pink, bg: cardTint(COLORS.pink), page: "pp-home" },
+  { id: "pb", color: COLORS.teal, bg: cardTint(COLORS.teal), page: "pb-home", img: puzzleBoxSession },
+  { id: "research", color: COLORS.purple, bg: cardTint(COLORS.purple) },
 ];
 
 function WhatWeDo({ onNavigate }) {
   const isMobile = useIsMobile(760);
+  const t = useT();
+  const items = WHAT_WE_DO.map(item => ({ ...item, ...t.whatWeDo[item.id] }));
   return (
     <section style={{ background: COLORS.white, padding: isMobile ? "64px 22px" : "100px 40px" }}>
       <div style={{ maxWidth: 1150, margin: "0 auto" }}>
         <Reveal>
-          <SectionHeading align="center" eyebrow="What we do" title="Play, screening and research, all connected" maxWidth={640} />
+          <SectionHeading align="center" eyebrow={t.whatEyebrow} title={t.whatTitle} maxWidth={640} />
         </Reveal>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 22 }}>
-          {WHAT_WE_DO.map((item, i) => (
-            <Reveal key={item.title} delay={i * 0.12}>
+          {items.map((item, i) => (
+            <Reveal key={item.id} delay={i * 0.12}>
               <div className="soft-card" style={{
                 height: "100%", padding: isMobile ? "30px 26px" : "38px 32px", borderRadius: 28,
                 background: item.bg, display: "flex", flexDirection: "column", overflow: "hidden",
@@ -843,13 +1046,15 @@ function WhatWeDo({ onNavigate }) {
 // titles only and the descriptions appear as a list underneath.
 
 const VISION_ITEMS = [
-  { title: "The Puzzle Box", desc: "ECD developmental screening\nfor 5 to 6 year olds.", color: COLORS.teal, page: "pb-home" },
-  { title: "Puzzle Play", desc: "Nationwide puzzle development\nfor Grades 0 to 7.", color: COLORS.pink, page: "pp-home" },
-  { title: "Puzzle TV", desc: "An educational TV show\ntaking development into\nhomes.", color: COLORS.purple, inDevelopment: true },
-  { title: "Puzzle App", desc: "Puzzles for all — a digital\nplatform, everywhere.", color: COLORS.orange, inDevelopment: true },
-  { title: "Puzzle Production", desc: "Design, production and\ndistribution, creating jobs\nthrough printing and recycling.", color: COLORS.maroon, inDevelopment: true },
+  // Titles are product names (the same in every language); each description
+  // is in T.vision, keyed by `id`.
+  { id: "pb", title: "The Puzzle Box", color: COLORS.teal, page: "pb-home" },
+  { id: "pp", title: "Puzzle Play", color: COLORS.pink, page: "pp-home" },
+  { id: "tv", title: "Puzzle TV", color: COLORS.purple, inDevelopment: true },
+  { id: "app", title: "Puzzle App", color: COLORS.orange, inDevelopment: true },
+  { id: "production", title: "Puzzle Production", color: COLORS.maroon, inDevelopment: true },
   // Neutral rather than teal, so it isn't mistaken for part of The Puzzle Box
-  { title: "Puzzle Data Analysis", desc: "Recording the shifts that\npuzzles make.", color: COLORS.inkFaint, inDevelopment: true },
+  { id: "data", title: "Puzzle Data Analysis", color: COLORS.inkFaint, inDevelopment: true },
 ];
 
 const VISION_COLS = 3;
@@ -865,6 +1070,8 @@ function VisionSection({ onNavigate }) {
   // Which in-development piece is showing its "In development" badge
   // (on hover, keyboard focus, or a tap on phones)
   const [revealed, setRevealed] = useState(null);
+  const t = useT();
+  const visionItems = VISION_ITEMS.map(item => ({ ...item, desc: t.vision[item.id] }));
 
   const cols = isMobile ? 2 : VISION_COLS;
   const rows = isMobile ? 3 : VISION_ROWS;
@@ -878,9 +1085,9 @@ function VisionSection({ onNavigate }) {
       <div style={{ maxWidth: 1300, margin: "auto" }}>
         <SectionHeading
           align="center"
-          eyebrow="The bigger picture"
-          title="The Puzzle Project Vision"
-          lead="The Puzzle Box is one piece of a larger plan to bring puzzles into classrooms, homes and communities across South Africa."
+          eyebrow={t.visionEyebrow}
+          title={t.visionTitle}
+          lead={t.visionLead}
           maxWidth={620}
         />
 
@@ -896,7 +1103,7 @@ function VisionSection({ onNavigate }) {
             padding: isMobile ? "0" : "0 18px",
           }}
         >
-          {VISION_ITEMS.map((item, i) => {
+          {visionItems.map((item, i) => {
             const row = Math.floor(i / cols);
             const col = i % cols;
             const edges = gridEdges(row, col, rows, cols);
@@ -935,8 +1142,8 @@ function VisionSection({ onNavigate }) {
                 role={item.page ? "link" : item.inDevelopment ? "button" : undefined}
                 tabIndex={item.page || item.inDevelopment ? 0 : undefined}
                 aria-label={
-                  item.page ? `Go to ${item.title}`
-                  : item.inDevelopment ? `${item.title}, in development`
+                  item.page ? t.goTo(item.title)
+                  : item.inDevelopment ? t.inDevelopmentAria(item.title)
                   : undefined
                 }
                 style={{
@@ -1008,7 +1215,7 @@ function VisionSection({ onNavigate }) {
                       fontWeight: 800, color: ON_DARK, letterSpacing: "0.03em",
                       borderBottom: "1px solid rgba(255,255,255,0.65)", paddingBottom: 2,
                     }}>
-                      Learn more →
+                      {t.learnMore}
                     </span>
                   )}
 
@@ -1029,7 +1236,7 @@ function VisionSection({ onNavigate }) {
                       letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap",
                     }}>
                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, flexShrink: 0 }} />
-                      In development
+                      {t.inDevelopment}
                     </span>
                   )}
                 </div>
@@ -1041,7 +1248,7 @@ function VisionSection({ onNavigate }) {
         {/* Phones: descriptions as a readable list under the puzzle */}
         {isMobile && (
           <ul style={{ listStyle: "none", padding: 0, margin: "40px auto 0", maxWidth: 480, display: "grid", gap: 16 }}>
-            {VISION_ITEMS.map(item => (
+            {visionItems.map(item => (
               <li key={item.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <span style={{ width: 10, height: 10, borderRadius: "50%", background: item.color, flexShrink: 0, marginTop: 6 }} />
                 <div>
@@ -1049,7 +1256,7 @@ function VisionSection({ onNavigate }) {
                     {item.title}
                     {item.inDevelopment && (
                       <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.inkFaint, marginLeft: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                        In development
+                        {t.inDevelopment}
                       </span>
                     )}
                   </p>
@@ -1069,6 +1276,7 @@ function VisionSection({ onNavigate }) {
 // ---- 7. Support: warm, personal ask --------------------------------------
 function SupportBand({ onNavigate }) {
   const isMobile = useIsMobile(760);
+  const t = useT();
   return (
     <section style={{ background: cardTint(COLORS.pink), padding: isMobile ? "64px 22px" : "100px 40px" }}>
       <Reveal>
@@ -1080,16 +1288,16 @@ function SupportBand({ onNavigate }) {
           <PuzzlePiece size={90} color={COLORS.teal} rotate={18} style={{ position: "absolute", bottom: -30, left: -24 }} />
           <div style={{ padding: isMobile ? "40px 26px" : "60px 56px", textAlign: "center", position: "relative" }}>
             <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: COLORS.pink, marginBottom: 12 }}>
-              Make a difference
+              {t.supportEyebrow}
             </p>
             <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 900, color: COLORS.ink, lineHeight: 1.12, letterSpacing: "-0.02em", marginBottom: 14 }}>
-              Help a child get seen sooner
+              {t.supportTitle}
             </h2>
             <p style={{ fontSize: 16, color: COLORS.inkMid, lineHeight: 1.75, marginBottom: 26, maxWidth: 520, marginLeft: "auto", marginRight: "auto" }}>
-              Your donation goes towards The Puzzle Box Screener and Puzzle Play, reaching more children and training more educators.
+              {t.supportText}
             </p>
             <button onClick={() => onNavigate("donate")} className="hero-btn hero-btn--primary">
-              Donate
+              {t.donate}
             </button>
           </div>
         </div>
@@ -1103,6 +1311,7 @@ function SupportBand({ onNavigate }) {
 // tinted cards) → Vision (cream) → Support (soft pink) → CTA
 export default function Homepage({ onNavigateToLogin, onNavigate }) {
   const go = onNavigate || (() => console.warn("No onNavigate handler passed to Homepage"));
+  const t = useT();
 
   return (
     <div style={{ fontFamily: FONTS.body }}>
@@ -1113,8 +1322,8 @@ export default function Homepage({ onNavigateToLogin, onNavigate }) {
       `}</style>
       <Navbar site="tpp" current="home" overlay onNavigate={go} onLoginClick={onNavigateToLogin} />
       <VideoHero actions={[
-        { label: "Explore The Puzzle Box", primary: true, onClick: () => go("pb-home") },
-        { label: "Explore Puzzle Play", onClick: () => go("pp-home") },
+        { label: t.explorePb, primary: true, onClick: () => go("pb-home") },
+        { label: t.explorePp, onClick: () => go("pp-home") },
       ]} />
       <WhyWeExist />
       <Pillars />

@@ -21,8 +21,7 @@ import AdminHome from "./components/dashboards/AdminHome";
 import PuzzleTransition from "./components/shared/PuzzleTransition";
 import TranslatorChat from "./components/translator/TranslatorChat";
 
-// NEW — your teammate's public site pages. Adjust these paths if her files
-// don't actually live in ./components (e.g. change to "./pages/Homepage" etc.)
+
 import Homepage from "./components/public/Homepage";
 import About from "./components/public/About";
 import HowItWorks from "./components/public/HowItWorks";
@@ -51,6 +50,29 @@ const writeMemberView = (v) => {
 
 // Older code paths used these page names; map them onto the new sites.
 const LEGACY_PAGES = { how: "pb-how", training: "pb-training" };
+
+
+const PAGE_TO_PATH = {
+  home: "/",
+  about: "/about",
+  donate: "/donate",
+  "pb-home": "/puzzlebox",
+  "pb-how": "/puzzlebox/how-it-works",
+  "pb-training": "/puzzlebox/training",
+  "pb-purchase": "/puzzlebox/purchase",
+  "pp-home": "/puzzleplay",
+  "pp-how": "/puzzleplay/how-it-works",
+  "pp-purchase": "/puzzleplay/purchase",
+  "pp-login": "/puzzleplay/login",
+};
+const PATH_TO_PAGE = Object.fromEntries(
+  Object.entries(PAGE_TO_PATH).map(([page, path]) => [path, page])
+);
+// Reads the address bar and works out which public page it points to.
+const pageFromPath = () => {
+  const p = window.location.pathname.replace(/\/+$/, "") || "/";
+  return PATH_TO_PAGE[p] || "home";
+};
 
 // Teachers (role "educator") skip the landing page entirely: if they've
 // already redeemed a Product number (training_access has a row for them),
@@ -99,21 +121,35 @@ function App() {
   // brief Dashboard-fallback flash while the profile fetch is in flight.
   const [profile, setProfile] = useState(undefined);
 
-  // Which public-site page a signed-out visitor is looking at:
-  // "home" | "about" | "donate" | "pb-home" | "pb-how" | "pb-training" |
-  // "pb-purchase" | "pp-home" | "pp-how" | "pp-purchase" | "pp-login"
-  const [publicPage, setPublicPageRaw] = useState("home");
-  const setPublicPage = (page) => setPublicPageRaw(LEGACY_PAGES[page] || page);
-
   // The Puzzle Box login screen sits on top of whatever page opened it.
   // loginCtx = { tier: 1 | 2 | null, mode: "login" | "register" } or null.
   const [showLogin, setShowLogin] = useState(false);
   const [loginCtx, setLoginCtx] = useState(null);
+
+  // Which public-site page a signed-out visitor is looking at:
+  // "home" | "about" | "donate" | "pb-home" | "pb-how" | "pb-training" |
+  // "pb-purchase" | "pp-home" | "pp-how" | "pp-purchase" | "pp-login"
+  
+  const [publicPage, setPublicPageRaw] = useState(pageFromPath);
+
+  
+  // Back button returns to the previous page instead of leaving the site.
+  const setPublicPage = (page) => {
+    const next = LEGACY_PAGES[page] || page;
+    setPublicPageRaw(next);
+    const path = PAGE_TO_PATH[next] || "/";
+    if (window.location.pathname !== path) {
+      window.history.pushState({ login: false }, "", path);
+    }
+  };
+
   const openLogin = (ctx) => {
     // Navbar buttons can hand us a click event — only accept a real context.
     const valid = ctx && typeof ctx === "object" && ("tier" in ctx || "mode" in ctx) ? ctx : null;
     setLoginCtx(valid);
     setShowLogin(true);
+    // opening Login is its own history entry, so Back closes it.
+    window.history.pushState({ login: true, ctx: valid }, "", window.location.pathname);
   };
 
   // "landing" | "training" | "purchase" | "dashboard" — see MEMBER_VIEW_KEY above
@@ -214,10 +250,22 @@ function App() {
     return () => unsub();
   }, []);
 
-  // NEW — scroll to top whenever the visitor moves between public pages
+  // scroll to top whenever the visitor moves between public pages
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [publicPage]);
+
+  // listens for the browser's Back / Forward buttons and shows the
+  // page (and Login screen, if it was open) that the history entry points to.
+  useEffect(() => {
+    const onPop = (e) => {
+      setPublicPageRaw(pageFromPath());
+      setShowLogin(!!e.state?.login);
+      setLoginCtx(e.state?.ctx || null);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   if (loading) {
     return (
@@ -328,7 +376,8 @@ function App() {
         tier={loginCtx?.tier || null}
         initialMode={loginCtx?.mode || "login"}
         // Back returns to the page the visitor opened Login from (Puzzle Box, Puzzle Play…), not always Home.
-        onBack={() => setShowLogin(false)}
+        // uses the browser history, so it matches the browser's Back button.
+        onBack={() => window.history.back()}
         onVerified={async (verifiedProfile) => {
           setProfile(verifiedProfile);
           writeCachedProfile(verifiedProfile);

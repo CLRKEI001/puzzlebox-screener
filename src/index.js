@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom/client';  // ReactDOM is a companion library tha
 import './index.css';  // This loads your global CSS file. Any styles written in index.css apply across
 import App from './App';   // This imports your main App component from App.js.
 import { ThemeProvider } from './theme/ThemeContext'; // site-wide light/dark theme
+import { LanguageProvider } from './theme/LanguageContext'; // site-wide EN / AF / XH for screens without their own
 // index.js only needs to know about App, and App handles everything else.
 import reportWebVitals from './reportWebVitals';  // This is a built-in performance measurement tool that came with create-react-app.
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";  // for the offline capabilities
@@ -28,7 +29,9 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <ThemeProvider>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

@@ -4,6 +4,7 @@ import {
 } from "../shared/SiteChrome";
 import { supabase } from "../../services/supabaseClient";
 import { mapPurchaseRequestRow } from "../../utils/mappers";
+import { useLanguage } from "../../theme/LanguageContext";
 
 // ---------------------------------------------------------------------------
 // Purchase — "Buy The Puzzle Box Screener"
@@ -21,11 +22,130 @@ import { mapPurchaseRequestRow } from "../../utils/mappers";
 // MemberArea) can show exactly the same content without the public chrome.
 // ---------------------------------------------------------------------------
 
+// Shared (non-text) fields; each item's title/desc comes from T[lang].included
 const INCLUDED = [
-  { title: "The physical screener kit", desc: "Everything needed to run the puzzle activity with a child aged 5 to 6.", color: COLORS.teal },
-  { title: "A unique Product number", desc: "Supplied with every screener. You enter it after logging in to unlock the training modules.", color: COLORS.pink },
-  { title: "Access to the screening platform", desc: "Once your training is complete and your credentials are verified, you can capture and view screenings online.", color: COLORS.purple },
+  { key: "kit",      color: COLORS.teal },
+  { key: "product",  color: COLORS.pink },
+  { key: "platform", color: COLORS.purple },
 ];
+
+// Page text in English / Afrikaans / isiXhosa (follows the site-wide language)
+const T = {
+  en: {
+    included: {
+      kit:      { title: "The physical screener kit", desc: "Everything needed to run the puzzle activity with a child aged 5 to 6." },
+      product:  { title: "A unique Product number", desc: "Supplied with every screener. You enter it after logging in to unlock the training modules." },
+      platform: { title: "Access to the screening platform", desc: "Once your training is complete and your credentials are verified, you can capture and view screenings online." },
+    },
+    errRequired: "Please fill in your name, email and organisation / school.",
+    errSend: "Something went wrong sending your request — please try again.",
+    sentTitle: "Request received",
+    sentBody: (first, email) => `Thanks, ${first} — someone from our team will be in touch at ${email} with pricing and your screener's Product number once your order is confirmed.`,
+    back: "← Back",
+    formTitle: "Request to purchase",
+    formLead: "Tell us a bit about your order and we'll follow up with pricing and your screener's Product number.",
+    nameLabel: "Your name *",
+    emailLabel: "Email *",
+    orgLabel: "Organisation / school *",
+    phoneLabel: "Contact number",
+    countLabel: "Number of screeners",
+    messageLabel: "Anything else we should know?",
+    optional: "Optional",
+    sending: "Sending…",
+    send: "Send request",
+    readyTitle: "✓ Your order is ready",
+    readyBody: "Enter this Product number on your dashboard to unlock training.",
+    pending: (date, email) => `● Your request from ${date} is being reviewed — we'll follow up at ${email}.`,
+    declined: "Your previous request wasn't able to go ahead. Feel free to send another with more detail, or get in touch.",
+    photoLabel: "Screener kit photo",
+    photoAlt: "The Puzzle Box Screener kit",
+    receiveEyebrow: "What you receive",
+    receiveTitle: "One screener, everything you need to get certified",
+    price: "Price",
+    tbc: "To be confirmed",
+    requestAnother: "Request another screener",
+    noCheckout: "There is no online checkout yet — tell us what you need and we'll follow up with pricing and a Product number.",
+    pageBadge: "Purchase",
+    pageTitle: "Buy The Puzzle Box Screener",
+    pageLead: "Every screener comes with a Product number. Once you have your screener, log in and use the number to unlock your training.",
+  },
+  af: {
+    included: {
+      kit:      { title: "Die fisiese sifterstel", desc: "Alles wat nodig is om die legkaartaktiwiteit met 'n kind van 5 tot 6 jaar te doen." },
+      product:  { title: "'n Unieke Produknommer", desc: "Word saam met elke sifter verskaf. Jy voer dit in nadat jy ingeteken het om die opleidingsmodules oop te sluit." },
+      platform: { title: "Toegang tot die siftingsplatform", desc: "Sodra jou opleiding voltooi is en jou geloofsbriewe geverifieer is, kan jy siftings aanlyn vaslê en bekyk." },
+    },
+    errRequired: "Vul asseblief jou naam, e-pos en organisasie / skool in.",
+    errSend: "Iets het verkeerd geloop met die stuur van jou versoek — probeer asseblief weer.",
+    sentTitle: "Versoek ontvang",
+    sentBody: (first, email) => `Dankie, ${first} — iemand van ons span sal by ${email} met jou in verbinding tree oor pryse en jou sifter se Produknommer sodra jou bestelling bevestig is.`,
+    back: "← Terug",
+    formTitle: "Versoek om te koop",
+    formLead: "Vertel ons 'n bietjie van jou bestelling, en ons sal opvolg met pryse en jou sifter se Produknommer.",
+    nameLabel: "Jou naam *",
+    emailLabel: "E-pos *",
+    orgLabel: "Organisasie / skool *",
+    phoneLabel: "Kontaknommer",
+    countLabel: "Aantal sifters",
+    messageLabel: "Is daar nog iets wat ons moet weet?",
+    optional: "Opsioneel",
+    sending: "Stuur tans…",
+    send: "Stuur versoek",
+    readyTitle: "✓ Jou bestelling is gereed",
+    readyBody: "Voer hierdie Produknommer op jou paneelbord in om die opleiding oop te sluit.",
+    pending: (date, email) => `● Jou versoek van ${date} word hersien — ons sal by ${email} opvolg.`,
+    declined: "Jou vorige versoek kon nie deurgaan nie. Stuur gerus nog een met meer besonderhede, of kontak ons.",
+    photoLabel: "Foto van die sifterstel",
+    photoAlt: "Die Puzzle Box-sifterstel",
+    receiveEyebrow: "Wat jy ontvang",
+    receiveTitle: "Een sifter, alles wat jy nodig het om gesertifiseer te word",
+    price: "Prys",
+    tbc: "Nog te bevestig",
+    requestAnother: "Versoek nog 'n sifter",
+    noCheckout: "Daar is nog nie 'n aanlyn betaalpunt nie — sê vir ons wat jy nodig het, en ons sal opvolg met pryse en 'n Produknommer.",
+    pageBadge: "Koop",
+    pageTitle: "Koop die Puzzle Box-sifter",
+    pageLead: "Elke sifter kom met 'n Produknommer. Sodra jy jou sifter het, teken in en gebruik die nommer om jou opleiding oop te sluit.",
+  },
+  xh: {
+    included: {
+      kit:      { title: "Ikhithi yesixhobo sokuhlola", desc: "Yonke into efunekayo ukuqhuba umsebenzi wephazili nomntwana oneminyaka emi-5 ukuya kwemi-6." },
+      product:  { title: "Inombolo yeMveliso ekhethekileyo", desc: "Inikwa nesixhobo ngasinye sokuhlola. Uyifaka emva kokungena ukuze uvule iimodyuli zoqeqesho." },
+      platform: { title: "Ukufikelela kwiqonga lokuhlola", desc: "Xa ugqibile uqeqesho lwakho kwaye iziqinisekiso zakho zobungcali ziqinisekisiwe, ungabhala uze ujonge uhlolo kwi-intanethi." },
+    },
+    errRequired: "Nceda ubhale igama lakho, i-imeyile nombutho / isikolo.",
+    errSend: "Kukho into engahambanga kakuhle xa bekuthunyelwa isicelo sakho — nceda uzame kwakhona.",
+    sentTitle: "Isicelo sifunyenwe",
+    sentBody: (first, email) => `Enkosi, ${first} — omnye weqela lethu uya kuqhagamshelana nawe ku-${email} malunga namaxabiso nenombolo yeMveliso yesixhobo sakho sokuhlola xa i-odolo yakho iqinisekisiwe.`,
+    back: "← Buyela umva",
+    formTitle: "Isicelo sokuthenga",
+    formLead: "Sixelele kancinci nge-odolo yakho, kwaye siza kukubuyela ngamaxabiso nenombolo yeMveliso yesixhobo sakho sokuhlola.",
+    nameLabel: "Igama lakho *",
+    emailLabel: "I-imeyile *",
+    orgLabel: "Umbutho / isikolo *",
+    phoneLabel: "Inombolo yomnxeba",
+    countLabel: "Inani lezixhobo zokuhlola",
+    messageLabel: "Ingaba kukho enye into ekufuneka siyazi?",
+    optional: "Akunyanzelekanga",
+    sending: "Iyathumela…",
+    send: "Thumela isicelo",
+    readyTitle: "✓ I-odolo yakho ilungile",
+    readyBody: "Faka le nombolo yeMveliso kwiphini lakho ukuze uvule uqeqesho.",
+    pending: (date, email) => `● Isicelo sakho sango-${date} siyaphononongwa — siza kukubuyela ku-${email}.`,
+    declined: "Isicelo sakho sangaphambili asikwazanga ukuqhubeka. Ungathumela esinye esineenkcukacha ezingakumbi, okanye uqhagamshelane nathi.",
+    photoLabel: "Umfanekiso wekhithi yokuhlola",
+    photoAlt: "Ikhithi yesixhobo sokuhlola se-Puzzle Box",
+    receiveEyebrow: "Into oyifumanayo",
+    receiveTitle: "Isixhobo sokuhlola esinye, yonke into oyidingayo ukuze ufumane isatifikethi",
+    price: "Ixabiso",
+    tbc: "Liza kuqinisekiswa",
+    requestAnother: "Cela esinye isixhobo sokuhlola",
+    noCheckout: "Akukabikho ndlela yokuhlawula kwi-intanethi okwangoku — sixelele into oyidingayo, kwaye siza kukubuyela ngamaxabiso nenombolo yeMveliso.",
+    pageBadge: "Thenga",
+    pageTitle: "Thenga isixhobo sokuhlola se-Puzzle Box",
+    pageLead: "Isixhobo ngasinye sokuhlola siza nenombolo yeMveliso. Xa sele unesixhobo sakho, ngena uze usebenzise inombolo ukuvula uqeqesho lwakho.",
+  },
+};
 
 const EMPTY_FORM = { name: "", email: "", organisation: "", phone: "", numberOfScreeners: "", message: "" };
 
@@ -40,6 +160,8 @@ const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 800, color: C
 
 export function PurchaseContent({ user }) {
   const isMobile = useIsMobile(860);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   // "info" = the what-you-get panel with the CTA · "form" = the request
   // form · "sent" = confirmation after a successful submit.
   const [view, setView] = useState("info");
@@ -100,7 +222,7 @@ export function PurchaseContent({ user }) {
     setError("");
 
     if (!form.name.trim() || !form.email.trim() || !form.organisation.trim()) {
-      setError("Please fill in your name, email and organisation / school.");
+      setError("errRequired");
       return;
     }
 
@@ -117,7 +239,7 @@ export function PurchaseContent({ user }) {
 
     if (insertErr) {
       console.error("Error submitting purchase request:", insertErr.message);
-      setError("Something went wrong sending your request — please try again.");
+      setError("errSend");
       return;
     }
 
@@ -134,16 +256,16 @@ export function PurchaseContent({ user }) {
           ✓
         </div>
         <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(22px, 2.8vw, 30px)", fontWeight: 900, color: COLORS.ink, marginBottom: 12 }}>
-          Request received
+          {t.sentTitle}
         </h2>
         <p style={{ fontSize: 15, color: COLORS.inkMid, lineHeight: 1.75, marginBottom: 24 }}>
-          Thanks, {form.name.split(" ")[0]} — someone from our team will be in touch at {form.email} with pricing and your screener's Product number once your order is confirmed.
+          {t.sentBody(form.name.split(" ")[0], form.email)}
         </p>
         <button onClick={() => { setForm({ ...EMPTY_FORM, name: user?.displayName || "", email: user?.email || "" }); setView("info"); }} style={{
           background: "none", border: `1.5px solid ${COLORS.border}`, borderRadius: 10,
           padding: "10px 20px", fontWeight: 800, fontSize: 13.5, color: COLORS.ink, cursor: "pointer", fontFamily: "inherit",
         }}>
-          ← Back
+          {t.back}
         </button>
       </div>
     );
@@ -156,46 +278,46 @@ export function PurchaseContent({ user }) {
           background: "none", border: "none", padding: 0, marginBottom: 18, cursor: "pointer",
           fontFamily: "inherit", fontSize: 13.5, fontWeight: 800, color: COLORS.inkMid,
         }}>
-          ← Back
+          {t.back}
         </button>
         <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(22px, 2.8vw, 30px)", fontWeight: 900, color: COLORS.ink, marginBottom: 8 }}>
-          Request to purchase
+          {t.formTitle}
         </h2>
         <p style={{ fontSize: 14, color: COLORS.inkMid, lineHeight: 1.65, marginBottom: 24 }}>
-          Tell us a bit about your order and we'll follow up with pricing and your screener's Product number.
+          {t.formLead}
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
           <div>
-            <label htmlFor="pbp-name" style={labelStyle}>Your name *</label>
+            <label htmlFor="pbp-name" style={labelStyle}>{t.nameLabel}</label>
             <input style={fieldStyle} value={form.name} onChange={setField("name")} id="pbp-name" placeholder="Jane Dlamini" />
           </div>
           <div>
-            <label htmlFor="pbp-email" style={labelStyle}>Email *</label>
+            <label htmlFor="pbp-email" style={labelStyle}>{t.emailLabel}</label>
             <input type="email" style={fieldStyle} value={form.email} onChange={setField("email")} id="pbp-email" placeholder="jane@school.org" />
           </div>
           <div>
-            <label htmlFor="pbp-org" style={labelStyle}>Organisation / school *</label>
+            <label htmlFor="pbp-org" style={labelStyle}>{t.orgLabel}</label>
             <input style={fieldStyle} value={form.organisation} onChange={setField("organisation")} id="pbp-org" placeholder="Sunshine Preschool" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
             <div>
-              <label htmlFor="pbp-phone" style={labelStyle}>Contact number</label>
+              <label htmlFor="pbp-phone" style={labelStyle}>{t.phoneLabel}</label>
               <input style={fieldStyle} value={form.phone} onChange={setField("phone")} id="pbp-phone" placeholder="082 000 0000" />
             </div>
             <div>
-              <label htmlFor="pbp-count" style={labelStyle}>Number of screeners</label>
+              <label htmlFor="pbp-count" style={labelStyle}>{t.countLabel}</label>
               <input type="number" min="1" style={fieldStyle} value={form.numberOfScreeners} onChange={setField("numberOfScreeners")} id="pbp-count" placeholder="1" />
             </div>
           </div>
           <div>
-            <label htmlFor="pbp-message" style={labelStyle}>Anything else we should know?</label>
-            <textarea rows={3} style={{ ...fieldStyle, resize: "vertical" }} value={form.message} onChange={setField("message")} id="pbp-message" placeholder="Optional" />
+            <label htmlFor="pbp-message" style={labelStyle}>{t.messageLabel}</label>
+            <textarea rows={3} style={{ ...fieldStyle, resize: "vertical" }} value={form.message} onChange={setField("message")} id="pbp-message" placeholder={t.optional} />
           </div>
 
           {error && (
             <div style={{ fontSize: 13, color: COLORS.pink, background: COLORS.pinkLight, borderRadius: 10, padding: "10px 14px" }}>
-              {error}
+              {t[error] || error}
             </div>
           )}
 
@@ -205,7 +327,7 @@ export function PurchaseContent({ user }) {
             cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.7 : 1,
             boxShadow: "0 6px 20px rgba(0,155,141,0.25)", justifySelf: "start",
           }}>
-            {submitting ? "Sending…" : "Send request"}
+            {submitting ? t.sending : t.send}
           </button>
         </form>
       </div>
@@ -222,9 +344,9 @@ export function PurchaseContent({ user }) {
         }}>
           <div>
             <p style={{ fontSize: 11.5, fontWeight: 800, color: COLORS.teal, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-              ✓ Your order is ready
+              {t.readyTitle}
             </p>
-            <p style={{ fontSize: 13.5, color: COLORS.inkMid }}>Enter this Product number on your dashboard to unlock training.</p>
+            <p style={{ fontSize: 13.5, color: COLORS.inkMid }}>{t.readyBody}</p>
           </div>
           <div style={{
             fontFamily: "monospace", fontWeight: 800, fontSize: 18, letterSpacing: "0.04em",
@@ -242,7 +364,7 @@ export function PurchaseContent({ user }) {
           background: COLORS.surface, border: `1px solid ${COLORS.border}`,
         }}>
           <p style={{ fontSize: 13.5, color: COLORS.inkMid, fontWeight: 700 }}>
-            ● Your request from {new Date(myLatestRequest.createdAt).toLocaleDateString()} is being reviewed — we'll follow up at {myLatestRequest.email}.
+            {t.pending(new Date(myLatestRequest.createdAt).toLocaleDateString(), myLatestRequest.email)}
           </p>
         </div>
       )}
@@ -253,7 +375,7 @@ export function PurchaseContent({ user }) {
           background: COLORS.pinkLight, border: `1px solid ${COLORS.border}`,
         }}>
           <p style={{ fontSize: 13.5, color: COLORS.ink, fontWeight: 700 }}>
-            Your previous request wasn't able to go ahead. Feel free to send another with more detail, or get in touch.
+            {t.declined}
           </p>
         </div>
       )}
@@ -265,8 +387,8 @@ export function PurchaseContent({ user }) {
         <div style={{ display: "flex", justifyContent: "center" }}>
           <PuzzlePhoto
             size={isMobile ? 240 : 320}
-            label="Screener kit photo"
-            alt="The Puzzle Box Screener kit"
+            label={t.photoLabel}
+            alt={t.photoAlt}
             color={COLORS.teal}
             edges={{ top: 0, right: 1, bottom: 1, left: 0 }}
             style={{ filter: "drop-shadow(0 14px 34px rgba(0,0,0,0.12))" }}
@@ -276,14 +398,14 @@ export function PurchaseContent({ user }) {
 
         <div>
           <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: COLORS.teal, marginBottom: 12 }}>
-            What you receive
+            {t.receiveEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 900, color: COLORS.ink, lineHeight: 1.12, letterSpacing: "-0.02em", marginBottom: 20 }}>
-            One screener, everything you need to get certified
+            {t.receiveTitle}
           </h2>
           <div style={{ display: "grid", gap: 14, marginBottom: 28 }}>
-            {INCLUDED.map(item => (
-              <div key={item.title} style={{
+            {INCLUDED.map(inc => ({ ...inc, ...t.included[inc.key] })).map(item => (
+              <div key={item.key} style={{
                 padding: "16px 18px", borderRadius: 14, background: COLORS.white,
                 border: `1px solid ${COLORS.border}`, borderLeft: `4px solid ${item.color}`,
               }}>
@@ -298,8 +420,8 @@ export function PurchaseContent({ user }) {
             background: `linear-gradient(135deg, ${COLORS.tealLight}, ${COLORS.purpleLight})`,
             border: `1px solid ${COLORS.border}`,
           }}>
-            <p style={{ fontSize: 11.5, fontWeight: 800, color: COLORS.teal, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Price</p>
-            <p style={{ fontFamily: FONTS.heading, fontSize: 20, fontWeight: 900, color: COLORS.ink }}>To be confirmed</p>
+            <p style={{ fontSize: 11.5, fontWeight: 800, color: COLORS.teal, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{t.price}</p>
+            <p style={{ fontFamily: FONTS.heading, fontSize: 20, fontWeight: 900, color: COLORS.ink }}>{t.tbc}</p>
           </div>
 
           <button onClick={() => setView("form")} style={{
@@ -308,10 +430,10 @@ export function PurchaseContent({ user }) {
             fontWeight: 800, fontSize: 15, fontFamily: "inherit", cursor: "pointer",
             boxShadow: "0 6px 20px rgba(0,155,141,0.25)",
           }}>
-            {myLatestRequest ? "Request another screener" : "Request to purchase"}
+            {myLatestRequest ? t.requestAnother : t.formTitle}
           </button>
           <p style={{ fontSize: 12.5, color: COLORS.inkFaint, marginTop: 12, lineHeight: 1.6 }}>
-            There is no online checkout yet — tell us what you need and we'll follow up with pricing and a Product number.
+            {t.noCheckout}
           </p>
         </div>
       </div>
@@ -322,6 +444,8 @@ export function PurchaseContent({ user }) {
 export default function PuzzleBoxPurchase({ onNavigate, onNavigateToLogin }) {
   const go = onNavigate || (() => console.warn("No onNavigate handler passed to PuzzleBoxPurchase"));
   const isMobile = useIsMobile(640);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
 
   return (
     <div style={{ fontFamily: FONTS.body }}>
@@ -340,16 +464,16 @@ export default function PuzzleBoxPurchase({ onNavigate, onNavigateToLogin }) {
             background: COLORS.tealLight, border: `1px solid rgba(0,155,141,0.25)`,
             fontSize: 12, fontWeight: 800, color: COLORS.teal, marginBottom: 24,
           }}>
-            Purchase
+            {t.pageBadge}
           </span>
           <h1 style={{
             fontFamily: FONTS.heading, fontSize: "clamp(34px, 4.4vw, 56px)",
             fontWeight: 900, color: COLORS.ink, lineHeight: 1.08, letterSpacing: "-0.03em", marginBottom: 20,
           }}>
-            Buy The Puzzle Box Screener
+            {t.pageTitle}
           </h1>
           <p style={{ fontSize: 17, color: COLORS.inkMid, lineHeight: 1.75, maxWidth: 680 }}>
-            Every screener comes with a Product number. Once you have your screener, log in and use the number to unlock your training.
+            {t.pageLead}
           </p>
         </div>
       </section>

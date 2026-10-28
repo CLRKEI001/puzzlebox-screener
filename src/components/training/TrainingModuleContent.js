@@ -1,6 +1,59 @@
 import React, { useState } from "react";
 import { Ico } from "../shared/Doodle";
 import { COLORS } from "../shared/SiteChrome";
+import { useLanguage } from "../../theme/LanguageContext";
+
+// Fixed UI labels only — the module content itself (titles, body text,
+// table rows...) comes from the data and is shown as-is.
+const T = {
+  en: {
+    verdict: "Verdict:",
+    users: "Users",
+    purpose: "Purpose",
+    supports: "Supports professionals to",
+    provides: "Provides",
+    sharedFoundation: "Shared foundation — one screening tool, two levels of application",
+    toPass: "To pass: ",
+    colBand: "Band",
+    colAge: "Age",
+    colPercentile: "Percentile",
+    colTotal: "Total score",
+    classroom: "What this can look like in the classroom",
+  },
+  af: {
+    verdict: "Uitspraak:",
+    users: "Gebruikers",
+    purpose: "Doel",
+    supports: "Ondersteun professionele persone om",
+    provides: "Bied",
+    sharedFoundation: "Gedeelde grondslag — een siftingsinstrument, twee vlakke van toepassing",
+    toPass: "Om te slaag: ",
+    colBand: "Band",
+    colAge: "Ouderdom",
+    colPercentile: "Persentiel",
+    colTotal: "Totale telling",
+    classroom: "Hoe dit in die klaskamer kan lyk",
+  },
+  xh: {
+    verdict: "Isigqibo:",
+    users: "Abasebenzisi",
+    purpose: "Injongo",
+    supports: "Incedisa iingcali ukuba",
+    provides: "Inika",
+    sharedFoundation: "Isiseko esifanayo — isixhobo esinye sohlolo, amanqanaba amabini okusetyenziswa",
+    toPass: "Ukuze kuphunyelelwe: ",
+    colBand: "Udidi",
+    colAge: "Ubudala",
+    colPercentile: "Ipesentayili",
+    colTotal: "Amanqaku ewonke",
+    classroom: "Oku kunokubonakala njani eklasini",
+  },
+};
+
+function useT() {
+  const { lang } = useLanguage();
+  return T[lang] || T.en;
+}
 
 // ---------------------------------------------------------------------------
 // TrainingModuleContent.js
@@ -187,6 +240,7 @@ function DomainGrid({ block }) {
 
 // ---- caseStudy --------------------------------------------------------
 function CaseStudy({ block }) {
+  const t = useT();
   const ratingColor = { strong: COLORS.teal, moderate: COLORS.orange, weak: COLORS.pink };
   return (
     <section>
@@ -204,7 +258,7 @@ function CaseStudy({ block }) {
         ))}
       </div>
       <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 10, background: COLORS.pinkLight, color: COLORS.pink, fontWeight: 800, fontSize: 12.5 }}>
-        Verdict: {block.verdict}
+        {t.verdict} {block.verdict}
       </div>
     </section>
   );
@@ -212,28 +266,29 @@ function CaseStudy({ block }) {
 
 // ---- tierCompare --------------------------------------------------------
 function TierCompare({ block }) {
+  const t = useT();
   const tierColors = ["teal", "purple"];
   return (
     <section>
       {block.title && <H2>{block.title}</H2>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14, marginBottom: 16 }}>
-        {block.tiers.map((t, i) => {
+        {block.tiers.map((tier, i) => {
           const { color, bg } = colorFor(tierColors[i % tierColors.length]);
           return (
             <Card key={i} style={{ borderTop: `4px solid ${color}` }}>
-              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, color, marginBottom: 10 }}>{t.name}</div>
-              <Field label="Users" value={t.users} />
-              <Field label="Purpose" value={t.purpose} />
-              <ListField label="Supports professionals to" items={t.supports} />
-              <ListField label="Provides" items={t.provides} />
-              <div style={{ marginTop: 10, display: "inline-block", padding: "5px 12px", borderRadius: 8, background: bg, color, fontWeight: 800, fontSize: 11.5 }}>{t.goal}</div>
+              <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, color, marginBottom: 10 }}>{tier.name}</div>
+              <Field label={t.users} value={tier.users} />
+              <Field label={t.purpose} value={tier.purpose} />
+              <ListField label={t.supports} items={tier.supports} />
+              <ListField label={t.provides} items={tier.provides} />
+              <div style={{ marginTop: 10, display: "inline-block", padding: "5px 12px", borderRadius: 8, background: bg, color, fontWeight: 800, fontSize: 11.5 }}>{tier.goal}</div>
             </Card>
           );
         })}
       </div>
       {block.shared && (
         <Card style={{ background: COLORS.pinkLight, border: "none" }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: COLORS.pink, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Shared foundation — one screening tool, two levels of application</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: COLORS.pink, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{t.sharedFoundation}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {block.shared.map((s, i) => (
               <span key={i} style={{ fontSize: 12, fontWeight: 700, color: COLORS.ink, background: COLORS.white, borderRadius: 8, padding: "5px 10px" }}>{s}</span>
@@ -268,6 +323,7 @@ function ListField({ label, items }) {
 // ---- adminScript --------------------------------------------------------
 const DOMAIN_COLOR = { cognitive: "maroon", language: "purple", fine_motor: "pink", emotional_social_moral: "teal" };
 function AdminScript({ block }) {
+  const t = useT();
   const [openN, setOpenN] = useState(block.items[0]?.n ?? null);
   return (
     <section>
@@ -290,7 +346,7 @@ function AdminScript({ block }) {
                 <div style={{ padding: "0 16px 16px 60px" }}>
                   <div style={{ fontSize: 12.5, color: COLORS.inkMid, lineHeight: 1.65, marginBottom: 8, fontStyle: "italic" }}>{item.script}</div>
                   <div style={{ fontSize: 12, color: COLORS.ink, lineHeight: 1.6, background: "var(--surface)", borderRadius: 8, padding: "8px 12px", marginBottom: item.ageTable ? 8 : 0 }}>
-                    <strong>To pass: </strong>{item.toPass}
+                    <strong>{t.toPass}</strong>{item.toPass}
                   </div>
                   {item.ageTable && (
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 8 }}>
@@ -321,6 +377,7 @@ function AdminScript({ block }) {
 
 // ---- scoringTable --------------------------------------------------------
 function ScoringTable({ block }) {
+  const t = useT();
   const bandColor = { "On Track": COLORS.teal, Progressing: COLORS.orange, Concerns: COLORS.pink };
   return (
     <section>
@@ -329,7 +386,7 @@ function ScoringTable({ block }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ textAlign: "left" }}>
-              {["Band", "Age", "Percentile", "Total score"].map((h) => (
+              {[t.colBand, t.colAge, t.colPercentile, t.colTotal].map((h) => (
                 <th key={h} style={{ padding: "8px 12px", borderBottom: `2px solid ${COLORS.border}`, color: COLORS.inkFaint, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
               ))}
             </tr>
@@ -380,6 +437,7 @@ function InterpretationLadder({ block }) {
 
 // ---- domainClassroomGuide --------------------------------------------------
 function DomainClassroomGuide({ block }) {
+  const t = useT();
   return (
     <section>
       {block.title && <H2>{block.title}</H2>}
@@ -390,7 +448,7 @@ function DomainClassroomGuide({ block }) {
             <Card key={d.id} style={{ borderTop: `4px solid ${color}` }}>
               <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 14.5, fontWeight: 800, color, marginBottom: 6 }}>{d.label}</div>
               <div style={{ fontSize: 12, color: COLORS.inkMid, lineHeight: 1.6, marginBottom: 10 }}>{d.summary}</div>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: COLORS.inkFaint, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>What this can look like in the classroom</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: COLORS.inkFaint, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{t.classroom}</div>
               <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 4 }}>
                 {d.classroom.map((c, i) => <li key={i} style={{ fontSize: 11.5, color: COLORS.ink, lineHeight: 1.5 }}>{c}</li>)}
               </ul>

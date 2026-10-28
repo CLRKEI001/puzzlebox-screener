@@ -4,6 +4,7 @@ import {
   PageHero, Reveal, PuzzlePiece, piecePath, gridEdges, useInView,
   Navbar, Footer, CallToAction, CONTACT_EMAIL, useIsMobile, VideoPauseButton,
 } from "../shared/SiteChrome";
+import { useLanguage } from "../../theme/LanguageContext";
 // Media sits directly in src/, two folders up from this file
 import puzzleDrawing from "../../assets/puzzle-drawing.jpg";   // WIP Puzzle Play drawing from the project brief
 import donateClip from "../../assets/donate-clip.mp4";   // children assembling the finished version
@@ -28,10 +29,120 @@ const BRANDING_THRESHOLD = 25000;   // "For sums above R25 000 branding can be i
 
 const fmt = (n) => `R${Number(n).toLocaleString("en-ZA")}`;
 
+// ---- Page copy in English, Afrikaans and isiXhosa ------------------------
+// Brand names (The Puzzle Project, The Puzzle Box, Puzzle Play) and rand
+// amounts stay the same in every language.
+const T = {
+  en: {
+    heroEyebrow: "Make a difference",
+    heroTitle: "Be a piece of",
+    heroHighlight: "the puzzle",
+    heroLead: "Choose where your donation goes, The Puzzle Box Screener or Puzzle Play, and help us reach more children across South Africa.",
+    customPlaceholder: "Custom amount (R)",
+    customAria: (title) => `Custom donation amount in rand for ${title}`,
+    minAmount: "Choose or enter an amount of R10 or more",
+    donateNow: "Donate now",
+    mailSubject: (amount, title) => `Donation of ${amount} — ${title}`,
+    mailBody: (amount, title) => `Hello,\n\nI would like to donate ${amount} towards ${title}. Please send me the banking details.\n\nThank you.`,
+    paymentNote: "Online payment isn't set up yet — \"Donate now\" opens an email to our team with your amount, and we'll reply with banking details.",
+    funds: "funds",
+    sessions: (n) => `${n} full screener session${n === 1 ? "" : "s"}`,
+    mixAgain: "Mix it up again",
+    puzzleAria: "A black and white drawing of a home and vegetable garden, cut into puzzle pieces that fit together",
+    pieceEyebrow: "Every piece counts",
+    pieceTitle: "Your donation is a piece of the puzzle",
+    pieceP1: "This is a work-in-progress Puzzle Play puzzle: a home and vegetable garden scene for learning about seasons, counting and animals.",
+    pieceP2: "Donations help us finish puzzles like this one, get them into classrooms, and screen more children with The Puzzle Box.",
+    handsEyebrow: "From drawing to classroom",
+    handsTitle: "And this is where it ends up",
+    handsText: "The same garden scene, finished and in children's hands. Choose where your donation goes below.",
+    videoAria: "Children fitting pieces into the finished garden puzzle",
+    screenerName: "The Puzzle Box Screener",
+    screenerTitle: "Support a child's future",
+    screenerIntro: "Every donation helps us screen more children and train more educators. R50 covers one full screener session.",
+    playTitle: "Put puzzles in more classrooms",
+    playIntro: "Every donation helps us bring Puzzle Play puzzles and lesson plans to more learners and educators.",
+    corporateLabel: "Corporate & major donors:",
+    corporateText: (amount) => `for sums above ${amount} branding can be included. Terms to be negotiated, so`,
+    getInTouch: "get in touch",
+    brandingSubject: "Puzzle Play — branding partnership",
+  },
+  af: {
+    heroEyebrow: "Maak 'n verskil",
+    heroTitle: "Wees 'n stukkie van",
+    heroHighlight: "die legkaart",
+    heroLead: "Kies waarheen jou skenking gaan, The Puzzle Box-sifter of Puzzle Play, en help ons om meer kinders regoor Suid-Afrika te bereik.",
+    customPlaceholder: "Eie bedrag (R)",
+    customAria: (title) => `Eie skenkingsbedrag in rand vir ${title}`,
+    minAmount: "Kies of tik 'n bedrag van R10 of meer in",
+    donateNow: "Skenk nou",
+    mailSubject: (amount, title) => `Skenking van ${amount} — ${title}`,
+    mailBody: (amount, title) => `Hallo,\n\nEk wil graag ${amount} skenk (${title}). Stuur asseblief vir my die bankbesonderhede.\n\nDankie.`,
+    paymentNote: "Aanlyn betaling is nog nie opgestel nie — \"Skenk nou\" maak 'n e-pos aan ons span oop met jou bedrag, en ons antwoord met die bankbesonderhede.",
+    funds: "betaal vir",
+    sessions: (n) => `${n} volle ${n === 1 ? "siftingsessie" : "siftingsessies"}`,
+    mixAgain: "Meng dit weer op",
+    puzzleAria: "'n Swart-en-wit tekening van 'n huis en groentetuin, in legkaartstukke gesny wat inmekaar pas",
+    pieceEyebrow: "Elke stukkie tel",
+    pieceTitle: "Jou skenking is 'n stukkie van die legkaart",
+    pieceP1: "Hierdie Puzzle Play-legkaart is nog in wording: 'n toneel van 'n huis en groentetuin om oor seisoene, tel en diere te leer.",
+    pieceP2: "Skenkings help ons om legkaarte soos hierdie een klaar te maak, hulle in klaskamers te kry, en meer kinders met The Puzzle Box te sif.",
+    handsEyebrow: "Van tekening tot klaskamer",
+    handsTitle: "En dit is waar dit eindig",
+    handsText: "Dieselfde tuintoneel, klaar en in kinders se hande. Kies hieronder waarheen jou skenking gaan.",
+    videoAria: "Kinders wat stukke in die voltooide tuinlegkaart pas",
+    screenerName: "The Puzzle Box-sifter",
+    screenerTitle: "Ondersteun 'n kind se toekoms",
+    screenerIntro: "Elke skenking help ons om meer kinders te sif en meer opvoeders op te lei. R50 betaal vir een volle siftingsessie.",
+    playTitle: "Sit legkaarte in meer klaskamers",
+    playIntro: "Elke skenking help ons om Puzzle Play-legkaarte en lesplanne by meer leerders en opvoeders uit te bring.",
+    corporateLabel: "Korporatiewe & groot skenkers:",
+    corporateText: (amount) => `vir bedrae bo ${amount} kan jou handelsmerk ingesluit word. Die voorwaardes word onderhandel, so`,
+    getInTouch: "kontak ons",
+    brandingSubject: "Puzzle Play — handelsmerkvennootskap",
+  },
+  xh: {
+    heroEyebrow: "Yenza umahluko",
+    heroTitle: "Yiba yinxalenye",
+    heroHighlight: "yephazili",
+    heroLead: "Khetha apho umnikelo wakho uya khona, kwiSikrini seThe Puzzle Box okanye kwiPuzzle Play, uze usincede sifikelele kubantwana abaninzi eMzantsi Afrika wonke.",
+    customPlaceholder: "Isixa sakho (R)",
+    customAria: (title) => `Isixa somnikelo wakho ngeerandi: ${title}`,
+    minAmount: "Khetha okanye ufake isixa se-R10 nangaphezulu",
+    donateNow: "Nikela ngoku",
+    mailSubject: (amount, title) => `Umnikelo we-${amount} — ${title}`,
+    mailBody: (amount, title) => `Molo,\n\nNdingathanda ukunikela nge-${amount} (${title}). Nceda undithumelele iinkcukacha zebhanki.\n\nEnkosi.`,
+    paymentNote: "Intlawulo kwi-intanethi ayikamiselwa — u-\"Nikela ngoku\" uvula i-imeyile eya kwiqela lethu enesixa sakho, kwaye siya kuphendula ngeenkcukacha zebhanki.",
+    funds: "ihlawulela",
+    sessions: (n) => (n === 1 ? "iseshoni enye epheleleyo yohlolo" : `iiseshoni ezi-${n} ezipheleleyo zohlolo`),
+    mixAgain: "Phinda uyixube",
+    puzzleAria: "Umzobo omnyama nomhlophe wekhaya negadi yemifuno, osikwe waba ngamaqhekeza ephazili angena ndawonye",
+    pieceEyebrow: "Iqhekeza ngalinye libalulekile",
+    pieceTitle: "Umnikelo wakho liqhekeza lephazili",
+    pieceP1: "Le yiphazili yePuzzle Play esasenziwa: umfanekiso wekhaya negadi yemifuno wokufunda ngamaxesha onyaka, ukubala nezilwanyana.",
+    pieceP2: "Iminikelo isinceda sigqibe iiphazili ezinje ngale, sizise emagumbini okufundela, size sihlole abantwana abaninzi ngeThe Puzzle Box.",
+    handsEyebrow: "Ukusuka emzobweni ukuya eklasini",
+    handsTitle: "Kwaye nantsi apho igqibela khona",
+    handsText: "Kwakuloo mfanekiso wegadi, ugqityiwe kwaye usezandleni zabantwana. Khetha apha ngezantsi apho umnikelo wakho uya khona.",
+    videoAria: "Abantwana befaka amaqhekeza kwiphazili yegadi egqityiweyo",
+    screenerName: "Isikrini seThe Puzzle Box",
+    screenerTitle: "Xhasa ikamva lomntwana",
+    screenerIntro: "Umnikelo ngamnye usinceda sihlole abantwana abaninzi kwaye siqeqeshe ootitshala abaninzi. I-R50 ihlawulela iseshoni enye epheleleyo yohlolo.",
+    playTitle: "Yisa iiphazili kumagumbi okufundela amaninzi",
+    playIntro: "Umnikelo ngamnye usinceda sizise iiphazili zePuzzle Play nezicwangciso zezifundo kubafundi nakootitshala abaninzi.",
+    corporateLabel: "Iinkampani nabanikeli abakhulu:",
+    corporateText: (amount) => `kwizixa ezingaphezu kwe-${amount} uphawu lwenkampani yakho lunokubandakanywa. Imiqathango iza kuxoxwa, ngoko ke`,
+    getInTouch: "qhagamshelana nathi",
+    brandingSubject: "Puzzle Play — intsebenziswano yophawu lwenkampani",
+  },
+};
+
 function DonationCard({ id, eyebrow, title, intro, amounts, defaultAmount, accent, sessionCost, footnote }) {
   const [selected, setSelected] = useState(defaultAmount);
   const [custom, setCustom] = useState("");
   const isMobile = useIsMobile(640);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
 
   const chooseAmount = (amt) => { setSelected(amt); setCustom(""); };
   const amountToGive = custom ? Number(custom) : selected;
@@ -88,8 +199,8 @@ function DonationCard({ id, eyebrow, title, intro, amounts, defaultAmount, accen
             min="10"
             value={custom}
             onChange={e => setCustom(e.target.value)}
-            placeholder="Custom amount (R)"
-            aria-label={`Custom donation amount in rand for ${title}`}
+            placeholder={t.customPlaceholder}
+            aria-label={t.customAria(title)}
             style={{
               flex: 1, minWidth: 220, padding: "14px 18px", borderRadius: 12,
               border: `1.5px solid ${custom ? accent : COLORS.border}`,
@@ -100,12 +211,12 @@ function DonationCard({ id, eyebrow, title, intro, amounts, defaultAmount, accen
           <button
             type="button"
             disabled={!(amountToGive >= 10)}
-            title={amountToGive >= 10 ? undefined : "Choose or enter an amount of R10 or more"}
+            title={amountToGive >= 10 ? undefined : t.minAmount}
             onClick={() => {
               // No online payment is set up yet, so this opens an email to the
               // team with the amount filled in; they reply with banking details.
-              const subject = encodeURIComponent(`Donation of ${fmt(amountToGive)} — ${title}`);
-              const body = encodeURIComponent(`Hello,\n\nI would like to donate ${fmt(amountToGive)} towards ${title}. Please send me the banking details.\n\nThank you.`);
+              const subject = encodeURIComponent(t.mailSubject(fmt(amountToGive), title));
+              const body = encodeURIComponent(t.mailBody(fmt(amountToGive), title));
               window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
             }}
             style={{
@@ -119,19 +230,19 @@ function DonationCard({ id, eyebrow, title, intro, amounts, defaultAmount, accen
             onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
           >
-            Donate now
+            {t.donateNow}
           </button>
         </div>
         <p style={{ fontSize: 12.5, color: COLORS.inkMid, marginTop: 12 }}>
-          Online payment isn't set up yet — "Donate now" opens an email to our team with your amount, and we'll reply with banking details.
+          {t.paymentNote}
         </p>
 
         {/* Live impact of the chosen amount (screener only) */}
         {sessions > 0 && (
           <p style={{ fontSize: 13.5, color: COLORS.inkMid, marginTop: 18, fontWeight: 600 }}>
-            {fmt(amountToGive)} funds{" "}
+            {fmt(amountToGive)} {t.funds}{" "}
             <strong style={{ color: accent }}>
-              {sessions} full screener session{sessions === 1 ? "" : "s"}
+              {t.sessions(sessions)}
             </strong>.
           </p>
         )}
@@ -174,6 +285,8 @@ const PIECES = Array.from({ length: ROWS * COLS }, (_, i) => {
 
 function AssemblingPuzzle() {
   const [ref, inView] = useInView({ threshold: 0.35 });
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   const [scattered, setScattered] = React.useState(false);
   const reduced = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const together = reduced || (inView && !scattered);
@@ -187,7 +300,7 @@ function AssemblingPuzzle() {
   return (
     <div ref={ref}>
       <svg viewBox="-40 -40 580 480" role="img"
-        aria-label="A black and white drawing of a home and vegetable garden, cut into puzzle pieces that fit together"
+        aria-label={t.puzzleAria}
         style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}>
         <defs>
           {PIECES.map(p => (
@@ -217,7 +330,7 @@ function AssemblingPuzzle() {
           style={{ opacity: together ? 1 : 0, transition: "opacity 0.6s ease 1.4s" }} />
       </svg>
       <div style={{ textAlign: "center", marginTop: 18 }}>
-        <button onClick={replay} className="mix-btn">Mix it up again</button>
+        <button onClick={replay} className="mix-btn">{t.mixAgain}</button>
       </div>
     </div>
   );
@@ -225,6 +338,8 @@ function AssemblingPuzzle() {
 
 function EveryPiece() {
   const isMobile = useIsMobile(860);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   return (
     <section style={{ padding: isMobile ? "64px 22px" : "100px 40px", background: COLORS.white, overflow: "hidden" }}>
       <div style={{
@@ -235,18 +350,16 @@ function EveryPiece() {
         <AssemblingPuzzle />
         <Reveal style={{ textAlign: isMobile ? "center" : "left" }}>
           <p style={{ color: COLORS.teal, textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.12em", marginBottom: 14, fontSize: 12 }}>
-            Every piece counts
+            {t.pieceEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(28px, 3.4vw, 44px)", color: COLORS.ink, lineHeight: 1.12, marginBottom: 20, fontWeight: 900, letterSpacing: "-0.02em" }}>
-            Your donation is a piece of the puzzle
+            {t.pieceTitle}
           </h2>
           <p style={{ color: COLORS.inkMid, lineHeight: 1.8, fontSize: 16, marginBottom: 14 }}>
-            This is a work-in-progress Puzzle Play puzzle: a home and vegetable garden scene
-            for learning about seasons, counting and animals.
+            {t.pieceP1}
           </p>
           <p style={{ color: COLORS.inkMid, lineHeight: 1.8, fontSize: 16 }}>
-            Donations help us finish puzzles like this one, get them into classrooms, and screen
-            more children with The Puzzle Box.
+            {t.pieceP2}
           </p>
         </Reveal>
       </div>
@@ -257,6 +370,8 @@ function EveryPiece() {
 // ---- From drawing to classroom: the real clip -----------------------------
 function InTheirHands() {
   const isMobile = useIsMobile(860);
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return (
     <section style={{ padding: isMobile ? "64px 22px" : "100px 40px", background: CREAM }}>
@@ -267,16 +382,16 @@ function InTheirHands() {
       }}>
         <Reveal style={{ order: isMobile ? 2 : 1, textAlign: isMobile ? "center" : "left" }}>
           <p style={{ color: COLORS.pink, textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.12em", marginBottom: 14, fontSize: 12 }}>
-            From drawing to classroom
+            {t.handsEyebrow}
           </p>
           <h2 style={{ fontFamily: FONTS.heading, fontSize: "clamp(28px, 3.4vw, 44px)", color: COLORS.ink, lineHeight: 1.12, marginBottom: 20, fontWeight: 900, letterSpacing: "-0.02em" }}>
-            And this is where it ends up
+            {t.handsTitle}
           </h2>
           <p style={{ color: COLORS.inkMid, lineHeight: 1.8, fontSize: 16, marginBottom: 28 }}>
-            The same garden scene, finished and in children's hands. Choose where your donation goes below.
+            {t.handsText}
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: isMobile ? "center" : "flex-start" }}>
-            <button onClick={() => jump("donate-puzzle-box")} className="jump-btn" style={{ background: COLORS.teal }}>The Puzzle Box Screener</button>
+            <button onClick={() => jump("donate-puzzle-box")} className="jump-btn" style={{ background: COLORS.teal }}>{t.screenerName}</button>
             <button onClick={() => jump("donate-puzzle-play")} className="jump-btn" style={{ background: COLORS.pink }}>Puzzle Play</button>
           </div>
         </Reveal>
@@ -288,7 +403,7 @@ function InTheirHands() {
             border: `8px solid ${COLORS.white}`,
           }}>
             <video src={donateClip} autoPlay muted loop playsInline preload="metadata"
-              aria-label="Children fitting pieces into the finished garden puzzle"
+              aria-label={t.videoAria}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             <VideoPauseButton />
           </div>
@@ -311,6 +426,8 @@ const DONATE_CSS = `
 
 export default function DonatePage({ onNavigate, onNavigateToLogin }) {
   const go = onNavigate || (() => console.warn("No onNavigate handler passed to DonatePage"));
+  const { lang } = useLanguage();
+  const t = T[lang] || T.en;
   const isMobile = useIsMobile(640);
 
   return (
@@ -318,10 +435,10 @@ export default function DonatePage({ onNavigate, onNavigateToLogin }) {
       <style>{`${PUBLIC_FONT_IMPORT}${WARM_PAGE_CSS}${DONATE_CSS}`}</style>
       <Navbar site="tpp" current="donate" onNavigate={go} onLoginClick={() => onNavigateToLogin()} />
       <PageHero
-        eyebrow="Make a difference"
-        title="Be a piece of"
-        highlight="the puzzle"
-        lead="Choose where your donation goes, The Puzzle Box Screener or Puzzle Play, and help us reach more children across South Africa."
+        eyebrow={t.heroEyebrow}
+        title={t.heroTitle}
+        highlight={t.heroHighlight}
+        lead={t.heroLead}
       />
       <EveryPiece />
       <InTheirHands />
@@ -330,9 +447,9 @@ export default function DonatePage({ onNavigate, onNavigateToLogin }) {
         <Reveal>
         <DonationCard
           id="donate-puzzle-box"
-          eyebrow="The Puzzle Box Screener"
-          title="Support a child's future"
-          intro="Every donation helps us screen more children and train more educators. R50 covers one full screener session."
+          eyebrow={t.screenerName}
+          title={t.screenerTitle}
+          intro={t.screenerIntro}
           amounts={SCREENER_AMOUNTS}
           defaultAmount={150}
           accent={COLORS.teal}
@@ -346,17 +463,17 @@ export default function DonatePage({ onNavigate, onNavigateToLogin }) {
         <DonationCard
           id="donate-puzzle-play"
           eyebrow="Puzzle Play"
-          title="Put puzzles in more classrooms"
-          intro="Every donation helps us bring Puzzle Play puzzles and lesson plans to more learners and educators."
+          title={t.playTitle}
+          intro={t.playIntro}
           amounts={PLAY_AMOUNTS}
           defaultAmount={150}
           accent={COLORS.pink}
           footnote={
             <>
-              <strong>Corporate & major donors:</strong> for sums above {fmt(BRANDING_THRESHOLD)} branding can be included. Terms to be negotiated, so{" "}
-              <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Puzzle Play — branding partnership")}`}
+              <strong>{t.corporateLabel}</strong> {t.corporateText(fmt(BRANDING_THRESHOLD))}{" "}
+              <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t.brandingSubject)}`}
                 style={{ color: COLORS.pink, fontWeight: 700 }}>
-                get in touch
+                {t.getInTouch}
               </a>.
             </>
           }

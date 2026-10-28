@@ -1563,6 +1563,7 @@ export default function TeacherHome({ user, profile, onOpenMember }) {
       <ScreenerWithOffline
         user={user}
         profile={profile}
+        lang={lang}
         initialChild={screenerChild}
         preferOffline={screenerOffline}
         onExit={() => {
