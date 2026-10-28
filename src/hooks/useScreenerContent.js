@@ -30,7 +30,7 @@ export function scoreFromAgeTable(table, age, value) {
   for (const row of rows) {
     if (row.test(value)) return row.score;
   }
-  return null;
+  return null; 
 }
 
 function rangeRowsToTestRows(rows) {

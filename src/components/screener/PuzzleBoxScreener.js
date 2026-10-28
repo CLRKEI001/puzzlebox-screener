@@ -683,7 +683,7 @@ export default function PuzzleBoxScreener({ user, profile, onExit, initialChild,
 
   const sectionAnswered = (section) =>
     section.questions.filter((q) => responses[q.id] && typeof responses[q.id].score === "number").length;
-
+ 
   // ── Submit ────────────────────────────────────────────────────────
   // Guarded wrapper: ignores a second click while a submit is running, and
   // blocks autosaves from the moment Submit starts.

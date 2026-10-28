@@ -15,7 +15,7 @@
 // user's Firebase ID token; we verify it against Google's public keys here
 // (verify_jwt is off in config.toml because Supabase's own check only knows
 // Supabase-issued tokens), then confirm the account is approved.
-//
+// 
 // Request:  POST { target: "en" | "xh" | "af", messages: [{ role: "user" | "assistant", text }] }
 // Response: { reply: string, model: string }  or  { error: string }
 //

@@ -36,7 +36,7 @@ create table public.offline_licences (
 create index offline_licences_user_id_idx on public.offline_licences (user_id);
 
 -- Admins can see, change and cancel any licence.
-
+ 
 alter table public.offline_licences enable row level security;
 
 -- Admins can see and cancel any licence

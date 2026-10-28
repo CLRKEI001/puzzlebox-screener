@@ -81,7 +81,7 @@ export async function uploadAndVerifyConsentForm({ childId, file }) {
     .update({
       consent_form_url: fileUrl,
       consent_file_name: file.name,
-      consent_uploaded_at: nowIso,
+      consent_uploaded_at: nowIso, 
     })
     .eq("id", childId);
   if (saveErr) throw new Error("Uploaded, but could not save the record — " + saveErr.message);

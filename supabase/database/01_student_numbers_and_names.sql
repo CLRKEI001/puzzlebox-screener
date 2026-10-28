@@ -56,7 +56,7 @@ create or replace function app.is_psychologist() returns boolean language sql st
 create or replace function app.is_teacher()      returns boolean language sql stable as $$ select coalesce(app.my_role() = 'educator', false) $$;
 -- any approved user, whatever their role
 create or replace function app.is_member()       returns boolean language sql stable as $$ select app.my_role() is not null $$;
-
+ 
 -- The SQL editor and server-side code (service role) skip the per-user checks.
 -- Deliberately NOT security definer: current_user must be the real caller.
 create or replace function app.is_trusted() returns boolean

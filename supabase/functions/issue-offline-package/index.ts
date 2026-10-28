@@ -207,7 +207,7 @@ async function handleDownload(uid: string, body: { deviceId?: string }) {
     // userId lets the app refuse to open this licence for anyone else signed in on the device
     licence: { id: licence.id, userId: uid, examiner: licence.examiner, expiresAt: licence.expires_at },
   });
-}
+} 
 
 async function handleStatus(uid: string, body: { licenceId?: string; markSynced?: boolean }) {
   if (!body.licenceId) return json({ error: "Missing licence ID." }, 400);

@@ -753,7 +753,7 @@ export function downloadExcel({ children, compareMode }) {
 // There is deliberately no name column: each child appears only under a
 // coded ID plus anonymous details, so the file is safe to share with sponsors.
 
-
+ 
   const childRows = children.map((c, i) => ({
 
       // The child's coded ID. If a child has none, a fallback like C001 is made

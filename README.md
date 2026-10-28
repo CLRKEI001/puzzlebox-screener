@@ -22,7 +22,7 @@ This repo holds two things in one app:
 | **Admin** | Approves new accounts, assigns roles, reviews consent forms and purchase requests, manages training and screener content, sees programme-wide analytics. |
 | **Data analyst** | Reads aggregated analytics. |
 
-New accounts are **not** active until an admin approves them.
+New accounts are **not** active until an admin approves them. 
 
 ### What's inside
 

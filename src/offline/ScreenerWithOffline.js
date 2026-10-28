@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import PuzzleBoxScreener from "../components/screener/PuzzleBoxScreener";
 import OfflineScreenerShell from "./OfflineScreenerShell";
 
-
+ 
 // Top-level wrapper that decides whether the screener runs online or from
 // the offline package. The rest of the app renders this one component and
 // doesn't need to know which mode is active.

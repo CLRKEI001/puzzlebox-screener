@@ -1553,7 +1553,7 @@ export default function TeacherHome({ user, profile, onOpenMember }) {
     setSelectedStudent(null);
   };
 
-
+ 
   // ============================================================
   // PUZZLEBOX SCREENER
   // ============================================================

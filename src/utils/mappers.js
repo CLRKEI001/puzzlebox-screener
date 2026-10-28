@@ -220,7 +220,7 @@ export function mapPurchaseRequestRow(r) {
     fulfilledAt: r.fulfilled_at,
     createdAt: r.created_at,
   };
-}
+} 
 
 export function mapTrainingCertificateRow(r) {
   return {

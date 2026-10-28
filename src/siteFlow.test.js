@@ -18,7 +18,7 @@ jest.mock("firebase/auth", () => ({
 jest.mock("firebase/firestore", () => ({
   collection: jest.fn(), onSnapshot: () => () => {}, query: jest.fn(), where: jest.fn(),
   getFirestore: jest.fn(), orderBy: jest.fn(), doc: jest.fn(), updateDoc: jest.fn(), addDoc: jest.fn(),
-}));
+})); 
 jest.mock("./supabaseClient", () => {
   const chain = () => {
     const c = {};

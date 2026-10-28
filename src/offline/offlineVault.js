@@ -438,7 +438,7 @@ async function doSync() {
   await migrateLegacyQueue();
 
   let synced = 0;
-  let remaining = 0;
+  let remaining = 0; 
 
   try {
     for (const k of await sessionKeys()) {

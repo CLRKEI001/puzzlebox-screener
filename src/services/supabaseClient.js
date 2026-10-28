@@ -65,7 +65,7 @@ const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 // If either value is missing, show a clear error at startup instead of
 // letting every database call fail silently later. This usually means .env
 // is missing or the dev server wasn't restarted after editing it.
-
+  
 if (!supabaseUrl || !supabaseAnonKey) {
   // Fails loudly at startup instead of silently breaking every DB call —
   // this almost always means .env is missing or the dev server wasn't

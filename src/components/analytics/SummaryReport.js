@@ -13,7 +13,7 @@ const DOMAINS = [
   { key:"social",         label:"Social Cognition" },
   { key:"emotion",        label:"Emotion" },
   { key:"moral",          label:"Moral" },
-];
+]; 
 
 const STATUS_META = {
   "On Track":               { color:"#0E7A6E", bg:"#E6F4F2", dot:"#0E7A6E" },

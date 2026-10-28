@@ -337,7 +337,7 @@ export const puzzleBoxContentV1 = {
           toPass: "Both must be correct — 1 characteristic required for each",
           scoringType: "binary",
         },
-        {
+        { 
           id: "q16",
           label: "Sentence repetition — shop",
           instruction: "Point to the boy and say: \"Repeat the following sentence: 'The boy would like to buy sweets from the shop.'\"",

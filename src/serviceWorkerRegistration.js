@@ -18,7 +18,7 @@ export function register(config) {
     if (isLocalhost) checkValidServiceWorker(swUrl, config);
     else registerValidSW(swUrl, config);
   });
-}
+} 
 
 function registerValidSW(swUrl, config) {
   navigator.serviceWorker

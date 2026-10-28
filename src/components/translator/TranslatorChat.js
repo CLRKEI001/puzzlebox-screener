@@ -51,7 +51,7 @@ export default function TranslatorChat() {
     setDraft("");
     setError("");
     setSending(true);
-    try {
+    try { 
 
 
       // Call the "translator-chat" Edge Function on behalf of the signed-in user.
