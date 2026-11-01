@@ -1,4 +1,23 @@
-
+-- PuzzleBox Screener — full database schema
+-- Generated from the live Supabase project. Current state, not a migration:
+-- supabase/migrations/ holds the change history; this is where it ended up.
+--
+-- DO NOT run this against the existing project. Constraints, triggers and
+-- policies are not idempotent and will fail with "already exists".
+--
+-- To rebuild on an empty database:
+--   1. Replace <FIREBASE_PROJECT_ID> in app.uid() (two places) with the
+--      Firebase project ID, or every request is treated as signed out.
+--   2. Replace <URL> and <REDACTED> in notify_email_on_message() with the
+--      email webhook endpoint and its secret. Both are redacted here on
+--      purpose — do not commit the real secret.
+--   3. Run the seed inserts: screener sections, questions, score tables,
+--      interpretation bands, training modules, product numbers.
+--
+-- Why everything is granted to anon: authentication is Firebase, so Supabase
+-- sees no Postgres user for a signed-in person. app.uid() reads the Firebase
+-- UID out of the JWT, and Row Level Security decides every row from there.
+-- The grants permit the commands; the policies decide the access. - then paste this ontop
 -- Functions refer to each other; let them be created in any order.
 set check_function_bodies = off;
 
